@@ -1,0 +1,1 @@
+cmd_/home/conor/Desktop/Linux-3-x-x-VCP-Driver-Source/cp210x.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/conor/Desktop/Linux-3-x-x-VCP-Driver-Source/cp210x.ko /home/conor/Desktop/Linux-3-x-x-VCP-Driver-Source/cp210x.o /home/conor/Desktop/Linux-3-x-x-VCP-Driver-Source/cp210x.mod.o ;  true
