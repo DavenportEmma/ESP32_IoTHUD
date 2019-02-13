@@ -10,10 +10,13 @@ It is probably a driver issue. Follow these steps:
 4. >sudo cp cp210x.ko /lib/modules/"$(uname -r)"/kernel/drivers/usb/serial/
 5. >sudo modprobe usbserial
 6. >sudo modprobe cp210x
+
 If step 6 fails, saying something about a required key, you need to disable secure boot using the mokutil program
 7. >sudo apt-get install mokutil
 8. >sudo mokutil --disable-validation
+
 REBOOT
 9. >sudo modprobe cp210x
+
 It should work now
 
