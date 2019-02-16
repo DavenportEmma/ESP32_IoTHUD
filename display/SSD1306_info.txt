@@ -1,0 +1,3 @@
+#define DISP_ADDR 0x3D
+
+#define DISP_ON 0xAF
