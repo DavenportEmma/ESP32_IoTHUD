@@ -1,0 +1,36 @@
+var mqtt = require('mqtt');
+var client = mqtt.connect(17785,'mqtt://m34.cloudmqtt.com',
+{
+	username: 'ovjzlenw',
+	password: 'KsQSe4xmunaE'
+});
+
+console.log("Starting Client");
+console.log("Client Started");
+
+client.on('connect', connectCallback);
+client.on('message', messageCallback);
+client.on('error', function(err)
+{
+	console.log(err);
+});
+
+function connectCallback()
+{
+	client.subscribe('/topic/qos1');
+	client.subscribe('/topic/qos0');
+	client.publish('/topic/test','hello world',publishCallback);
+}
+
+function publishCallback(error)
+{
+	if(error)
+		console.log('error');
+	else
+		y
+console.log('message published');
+
+function messageCallback()
+{
+	console.log(message.toString());
+}
