@@ -1,4 +1,4 @@
-main.o: /home/conor/esp/i2c_self_test/main/main.c \
+main.o: /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/main.c \
  /home/conor/esp/esp-idf/components/newlib/include/stdio.h \
  /home/conor/esp/esp-idf/components/newlib/include/_ansi.h \
  /home/conor/esp/esp-idf/components/newlib/include/newlib.h \
@@ -23,7 +23,7 @@ main.o: /home/conor/esp/i2c_self_test/main/main.c \
  /home/conor/esp/esp-idf/components/newlib/include/stdint.h \
  /home/conor/esp/esp-idf/components/newlib/include/sys/_intsup.h \
  /home/conor/esp/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h \
- /home/conor/esp/i2c_self_test/build/include/sdkconfig.h \
+ /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/build/include/sdkconfig.h \
  /home/conor/esp/esp-idf/components/freertos/include/freertos/xtensa_config.h \
  /home/conor/esp/esp-idf/components/esp32/include/xtensa/hal.h \
  /home/conor/esp/esp-idf/components/esp32/include/xtensa/config/core.h \
@@ -136,7 +136,7 @@ main.o: /home/conor/esp/i2c_self_test/main/main.c \
 
 /home/conor/esp/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h:
 
-/home/conor/esp/i2c_self_test/build/include/sdkconfig.h:
+/home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/build/include/sdkconfig.h:
 
 /home/conor/esp/esp-idf/components/freertos/include/freertos/xtensa_config.h:
 
@@ -263,4 +263,4 @@ main.o: /home/conor/esp/i2c_self_test/main/main.c \
 /home/conor/esp/esp-idf/components/freertos/include/freertos/queue.h:
 
 /home/conor/esp/esp-idf/components/esp_ringbuf/include/freertos/ringbuf.h:
-/home/conor/esp/i2c_self_test/main/./main.c:
+/home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/./main.c:

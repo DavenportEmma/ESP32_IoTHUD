@@ -187,14 +187,12 @@ void begin(uint8_t vcs, uint8_t addr)
 	vccstate = vcs;
 
 	// display initialisation sequence
-	// init 1
-	command(SSD1306_DISPLAYOFF);			//0xAE
+	command(SSD1306_DISPLAYOFF);			// 0xAE
 	command(SSD1306_SETDISPLAYCLOCKDIV);	// 0xD5
 	command(0x80);							// the suggested ratio
 	command(SSD1306_SETMULTIPLEX);			// 0xA8
 	command(HEIGHT - 1);
 
-	// init 2
 	command(SSD1306_SETDISPLAYOFFSET);		// 0xD3
 	command(0x0);							// no offset
 	command(SSD1306_SETSTARTLINE | 0x0);	// line #0
@@ -202,13 +200,11 @@ void begin(uint8_t vcs, uint8_t addr)
               
 	command((vccstate == SSD1306_EXTERNALVCC) ? 0x10 : 0x14);
 
-	// init 3
 	command(SSD1306_MEMORYMODE);			// 0x20
 	command(0x00);							// horizontal addressing mode
 	command(SSD1306_SEGREMAP | 0x1);		// col. addr 0 is mapped to SEG0
 	command(SSD1306_COMSCANDEC);			// 0xC8scan from COM[N-1] to COM0
 
-	// init 4
 	command(SSD1306_SETCOMPINS);			//0xDA
 	command(0x12);							// alternative COM pin config
 											// disable COM Left/Right remap
@@ -218,7 +214,6 @@ void begin(uint8_t vcs, uint8_t addr)
   	command(SSD1306_SETPRECHARGE); // 0xd9
   	command((vccstate == SSD1306_EXTERNALVCC) ? 0x22 : 0xF1);
 
-  	// init 5
   	command(SSD1306_SETVCOMDETECT);			// 0xDB
   	command(0x40);
   	command(SSD1306_DISPLAYALLON_RESUME);	// 0xA4
@@ -227,7 +222,7 @@ void begin(uint8_t vcs, uint8_t addr)
   	command(SSD1306_DISPLAYON);				// / Main screen turn on
 }
 
-void drawPixel(int16_t x, int16_t y, uint16_t color)
+void drawPixel(int16_t x, int16_t y, uint16_t colour)
 {
 	if((x >= 0) && (x < WIDTH && (y >= 0) && (y < HEIGHT))) 
 	{
@@ -247,7 +242,7 @@ void drawPixel(int16_t x, int16_t y, uint16_t color)
 	    		y = HEIGHT - y - 1;
 	    		break;
 	    }
-	    switch(color) 
+	    switch(colour) 
 	    {
 	    	case WHITE:   buffer[x + (y/8)*WIDTH] |=  (1 << (y&7)); break;
 	    	case BLACK:   buffer[x + (y/8)*WIDTH] &= ~(1 << (y&7)); break;
@@ -256,9 +251,138 @@ void drawPixel(int16_t x, int16_t y, uint16_t color)
 	}
 }
 
+void HLine(int16_t x, int16_t y, int16_t w, uint16_t colour) 
+{
+    if((y >= 0) && (y < HEIGHT)) 
+    { // Y coord in bounds?
+        if(x < 0) 
+        {   // Clip left
+            w += x;
+            x  = 0;
+        }
+        if((x + w) > WIDTH) 
+        {   // Clip right
+            w = (WIDTH - x);
+        }
+        if(w > 0) 
+        {   // Proceed only if width is positive
+            uint8_t *pBuf = &buffer[(y / 8) * WIDTH + x], mask = 1 << (y & 7);
+            switch(colour) 
+            {
+                case WHITE:               while(w--) { *pBuf++ |= mask; }; break;
+                case BLACK: mask = ~mask; while(w--) { *pBuf++ &= mask; }; break;
+                case INVERSE:             while(w--) { *pBuf++ ^= mask; }; break;
+            }
+        }
+    } 
+}
+
+void VLine(int16_t x, int16_t y, int16_t h, uint16_t colour)
+{
+    
+}
+
+/*void aVLine(int16_t x, int16_t __y, int16_t __h, uint16_t colour) 
+{
+    if((x >= 0) && (x < WIDTH)) 
+    { // X coord in bounds?
+        if(__y < 0) 
+        { // Clip top
+            __h += __y;
+            __y = 0;
+        }   
+        if((__y + __h) > HEIGHT) 
+        { // Clip bottom
+            __h = (HEIGHT - __y);
+        }
+        if(__h > 0) 
+        {   // Proceed only if height is now positive
+            // this display doesn't need ints for coordinates,
+            // use local byte registers for faster juggling
+            uint8_t  y = __y, h = __h;
+            uint8_t *pBuf = &buffer[(y / 8) * WIDTH + x];
+
+            // do the first partial byte, if necessary - this requires some masking
+            uint8_t mod = (y & 7);
+            if(mod) 
+            {
+                // mask off the high n bits we want to set
+                mod = 8 - mod;
+                // note - lookup table results in a nearly 10% performance
+                // improvement in fill* functions
+                // uint8_t mask = ~(0xFF >> mod);
+                static const uint8_t PROGMEM premask[8] =
+                { 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
+                uint8_t mask = pgm_read_byte(&premask[mod]);
+                // adjust the mask if we're not going to reach the end of this byte
+                if(h < mod) mask &= (0XFF >> (mod - h));
+
+                switch(colour) 
+                {
+                    case WHITE:   *pBuf |=  mask; break;
+                    case BLACK:   *pBuf &= ~mask; break;
+                    case INVERSE: *pBuf ^=  mask; break;
+                }
+                pBuf += WIDTH;
+            }
+
+            if(h >= mod)   
+            {   // More to go?
+                h -= mod;
+                // Write solid bytes while we can - effectively 8 rows at a time
+                if(h >= 8) 
+                {
+                    if(colour == INVERSE) 
+                    {
+                        // separate copy of the code so we don't impact performance of
+                        // black/white write version with an extra comparison per loop
+                        do 
+                        {
+                            *pBuf ^= 0xFF;  // Invert byte
+                            pBuf  += WIDTH; // Advance pointer 8 rows
+                            h     -= 8;     // Subtract 8 rows from height
+                        } 
+                        while(h >= 8);
+                    } 
+                    else 
+                    {
+                        // store a local value to work with
+                        uint8_t val = (colour != BLACK) ? 255 : 0;
+                        do 
+                        {
+                            *pBuf = val;    // Set byte
+                            pBuf += WIDTH;  // Advance pointer 8 rows
+                            h    -= 8;      // Subtract 8 rows from height
+                        } 
+                        while(h >= 8);
+                    }
+                }
+
+                if(h) 
+                {   // Do the final partial byte, if necessary
+                    mod = h & 7;
+                    // this time we want to mask the low bits of the byte,
+                    // vs the high bits we did above
+                    // uint8_t mask = (1 << mod) - 1;
+                    // note - lookup table results in a nearly 10% performance
+                    // improvement in fill* functions
+                    static const uint8_t PROGMEM postmask[8] =
+                    { 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
+                    uint8_t mask = pgm_read_byte(&postmask[mod]);
+                    switch(colour) 
+                    {
+                        case WHITE:   *pBuf |=  mask; break;
+                        case BLACK:   *pBuf &= ~mask; break;
+                        case INVERSE: *pBuf ^=  mask; break;
+                    }
+                }
+            }
+        } // endif positive height
+    } // endif x in bounds
+}*/
+
 void display() 
 {
-
 	command(SSD1306_PAGEADDR);
 	command(0);
 	command(0xFF);
@@ -311,7 +435,7 @@ void app_main()
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display();
     clearDisplay();
-    drawPixel(10,10,WHITE);
+    drawPixel(10,60,WHITE);
     display();
     xTaskCreate(i2c_test_task, "i2c_test_task_0", 1024 * 2, (void *)0, 10, NULL);
 }

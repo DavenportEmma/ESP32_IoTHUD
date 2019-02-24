@@ -1,7 +1,7 @@
 esp_app_desc.o: \
  /home/conor/esp/esp-idf/components/app_update/esp_app_desc.c \
  /home/conor/esp/esp-idf/components/newlib/platform_include/assert.h \
- /home/conor/esp/i2c_self_test/build/include/sdkconfig.h \
+ /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/build/include/sdkconfig.h \
  /home/conor/esp/esp-idf/components/newlib/include/stdlib.h \
  /home/conor/esp/esp-idf/components/newlib/include/machine/ieeefp.h \
  /home/conor/esp/esp-idf/components/newlib/include/_ansi.h \
@@ -36,7 +36,7 @@ esp_app_desc.o: \
 
 /home/conor/esp/esp-idf/components/newlib/platform_include/assert.h:
 
-/home/conor/esp/i2c_self_test/build/include/sdkconfig.h:
+/home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/build/include/sdkconfig.h:
 
 /home/conor/esp/esp-idf/components/newlib/include/stdlib.h:
 
