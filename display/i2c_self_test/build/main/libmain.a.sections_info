@@ -1,0 +1,78 @@
+In archive /home/conor/esp/i2c_self_test/build/main/libmain.a:
+
+main.o:     file format elf32-xtensa-le
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .literal.i2c_test_task 00000004  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .literal.i2c_master_write_slave 0000001c  00000000  00000000  00000038  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  2 .literal.i2c_master_init 0000000c  00000000  00000000  00000054  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  3 .literal.command 00000020  00000000  00000000  00000060  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  4 .literal.clearDisplay 00000008  00000000  00000000  00000080  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  5 .literal.begin 00000078  00000000  00000000  00000088  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  6 .literal.drawPixel 00000008  00000000  00000000  00000100  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  7 .literal.display 00000058  00000000  00000000  00000108  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  8 .literal.app_main 0000003c  00000000  00000000  00000160  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  9 .text         00000000  00000000  00000000  0000019c  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+ 10 .data         00000000  00000000  00000000  0000019c  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+ 11 .bss          00000000  00000000  00000000  0000019c  2**0
+                  ALLOC
+ 12 .text.i2c_test_task 0000000f  00000000  00000000  0000019c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 13 .text.i2c_master_write_slave 0000004e  00000000  00000000  000001ac  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 14 .text.i2c_master_init 00000038  00000000  00000000  000001fc  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 15 .text.command 00000058  00000000  00000000  00000234  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 16 .text.clearDisplay 00000016  00000000  00000000  0000028c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 17 .text.begin   00000137  00000000  00000000  000002a4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 18 .text.drawPixel 0000011b  00000000  00000000  000003dc  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 19 .text.display 000000f4  00000000  00000000  000004f8  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 20 .rodata.str1.4 00000050  00000000  00000000  000005ec  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 21 .text.app_main 00000062  00000000  00000000  0000063c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 22 .rodata.__func__$5694 00000009  00000000  00000000  000006a0  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 23 .bss.rotation 00000001  00000000  00000000  000006a9  2**0
+                  ALLOC
+ 24 .debug_frame  000000e8  00000000  00000000  000006ac  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 25 .debug_info   00000dee  00000000  00000000  00000794  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 26 .debug_abbrev 00000308  00000000  00000000  00001582  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 27 .debug_loc    00000298  00000000  00000000  0000188a  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 28 .debug_aranges 00000060  00000000  00000000  00001b22  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 29 .debug_ranges 00000050  00000000  00000000  00001b82  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 30 .debug_line   000005d8  00000000  00000000  00001bd2  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 31 .debug_str    000006f6  00000000  00000000  000021aa  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 32 .comment      0000003b  00000000  00000000  000028a0  2**0
+                  CONTENTS, READONLY
+ 33 .xtensa.info  00000038  00000000  00000000  000028db  2**0
+                  CONTENTS, READONLY
+ 34 .xt.lit       00000048  00000000  00000000  00002913  2**0
+                  CONTENTS, RELOC, READONLY
+ 35 .xt.prop      000002b8  00000000  00000000  0000295b  2**0
+                  CONTENTS, RELOC, READONLY
