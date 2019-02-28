@@ -86,7 +86,8 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/main.c \
  /home/conor/esp/esp-idf/components/freertos/include/freertos/semphr.h \
  /home/conor/esp/esp-idf/components/freertos/include/freertos/queue.h \
  /home/conor/esp/esp-idf/components/freertos/include/freertos/queue.h \
- /home/conor/esp/esp-idf/components/esp_ringbuf/include/freertos/ringbuf.h
+ /home/conor/esp/esp-idf/components/esp_ringbuf/include/freertos/ringbuf.h \
+ /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/ascii.h
 
 /home/conor/esp/esp-idf/components/newlib/include/stdio.h:
 
@@ -263,4 +264,6 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/main.c \
 /home/conor/esp/esp-idf/components/freertos/include/freertos/queue.h:
 
 /home/conor/esp/esp-idf/components/esp_ringbuf/include/freertos/ringbuf.h:
+
+/home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/ascii.h:
 /home/conor/esp/ESP32_IoTHUD/display/i2c_self_test/main/./main.c:

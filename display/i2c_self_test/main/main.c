@@ -4,6 +4,7 @@
 #include <freertos/task.h>
 #include "esp_log.h"
 #include "driver/i2c.h"
+#include "ascii.h"
 #include "sdkconfig.h"
 
 static const char *TAG = "i2c-example";
@@ -279,107 +280,26 @@ void HLine(int16_t x, int16_t y, int16_t w, uint16_t colour)
 
 void VLine(int16_t x, int16_t y, int16_t h, uint16_t colour)
 {
+    // param y is starting bit number, not page number
+    // y = 0 -> 63
+    int pageNumber = (y - (y % 8))/8;
+    int bitNumber = y - (pageNumber * 8);
+    int mask = 0xFF << bitNumber;
+
+
     
+    buffer[x + (128 * pageNumber)] = (0xFF & mask);
 }
 
-/*void aVLine(int16_t x, int16_t __y, int16_t __h, uint16_t colour) 
+void drawChar(int c, int16_t x, int16_t y)
 {
-    if((x >= 0) && (x < WIDTH)) 
-    { // X coord in bounds?
-        if(__y < 0) 
-        { // Clip top
-            __h += __y;
-            __y = 0;
-        }   
-        if((__y + __h) > HEIGHT) 
-        { // Clip bottom
-            __h = (HEIGHT - __y);
-        }
-        if(__h > 0) 
-        {   // Proceed only if height is now positive
-            // this display doesn't need ints for coordinates,
-            // use local byte registers for faster juggling
-            uint8_t  y = __y, h = __h;
-            uint8_t *pBuf = &buffer[(y / 8) * WIDTH + x];
+    int i;
 
-            // do the first partial byte, if necessary - this requires some masking
-            uint8_t mod = (y & 7);
-            if(mod) 
-            {
-                // mask off the high n bits we want to set
-                mod = 8 - mod;
-                // note - lookup table results in a nearly 10% performance
-                // improvement in fill* functions
-                // uint8_t mask = ~(0xFF >> mod);
-                static const uint8_t PROGMEM premask[8] =
-                { 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
-                uint8_t mask = pgm_read_byte(&premask[mod]);
-                // adjust the mask if we're not going to reach the end of this byte
-                if(h < mod) mask &= (0XFF >> (mod - h));
-
-                switch(colour) 
-                {
-                    case WHITE:   *pBuf |=  mask; break;
-                    case BLACK:   *pBuf &= ~mask; break;
-                    case INVERSE: *pBuf ^=  mask; break;
-                }
-                pBuf += WIDTH;
-            }
-
-            if(h >= mod)   
-            {   // More to go?
-                h -= mod;
-                // Write solid bytes while we can - effectively 8 rows at a time
-                if(h >= 8) 
-                {
-                    if(colour == INVERSE) 
-                    {
-                        // separate copy of the code so we don't impact performance of
-                        // black/white write version with an extra comparison per loop
-                        do 
-                        {
-                            *pBuf ^= 0xFF;  // Invert byte
-                            pBuf  += WIDTH; // Advance pointer 8 rows
-                            h     -= 8;     // Subtract 8 rows from height
-                        } 
-                        while(h >= 8);
-                    } 
-                    else 
-                    {
-                        // store a local value to work with
-                        uint8_t val = (colour != BLACK) ? 255 : 0;
-                        do 
-                        {
-                            *pBuf = val;    // Set byte
-                            pBuf += WIDTH;  // Advance pointer 8 rows
-                            h    -= 8;      // Subtract 8 rows from height
-                        } 
-                        while(h >= 8);
-                    }
-                }
-
-                if(h) 
-                {   // Do the final partial byte, if necessary
-                    mod = h & 7;
-                    // this time we want to mask the low bits of the byte,
-                    // vs the high bits we did above
-                    // uint8_t mask = (1 << mod) - 1;
-                    // note - lookup table results in a nearly 10% performance
-                    // improvement in fill* functions
-                    static const uint8_t PROGMEM postmask[8] =
-                    { 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
-                    uint8_t mask = pgm_read_byte(&postmask[mod]);
-                    switch(colour) 
-                    {
-                        case WHITE:   *pBuf |=  mask; break;
-                        case BLACK:   *pBuf &= ~mask; break;
-                        case INVERSE: *pBuf ^=  mask; break;
-                    }
-                }
-            }
-        } // endif positive height
-    } // endif x in bounds
-}*/
+    for(i = 0; i < 5; i++)
+    {
+        buffer[(i + x) + (128 * y)] = font[i + (c * 5)];
+    }
+}
 
 void display() 
 {
@@ -435,7 +355,7 @@ void app_main()
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display();
     clearDisplay();
-    drawPixel(10,60,WHITE);
+    VLine(10,10,1,WHITE);
     display();
     xTaskCreate(i2c_test_task, "i2c_test_task_0", 1024 * 2, (void *)0, 10, NULL);
 }
