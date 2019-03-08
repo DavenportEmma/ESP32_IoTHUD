@@ -5,6 +5,7 @@
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "ascii.h"
+#include "font16px.h"
 #include "sdkconfig.h"
 
 static const char *TAG = "i2c-example";
@@ -252,6 +253,7 @@ void drawPixel(int16_t x, int16_t y, uint16_t colour)
 	}
 }
 
+// draws horizontal line
 void HLine(int16_t x, int16_t y, int16_t w, uint16_t colour) 
 {
     if((y >= 0) && (y < HEIGHT)) 
@@ -278,17 +280,53 @@ void HLine(int16_t x, int16_t y, int16_t w, uint16_t colour)
     } 
 }
 
+// draws vertical line
+// x = start x position
+// y = start y position in bits
+// h = length
 void VLine(int16_t x, int16_t y, int16_t h, uint16_t colour)
 {
+    int i;
     // param y is starting bit number, not page number
     // y = 0 -> 63
-    int pageNumber = (y - (y % 8))/8;
-    int bitNumber = y - (pageNumber * 8);
-    int mask = 0xFF << bitNumber;
+    // startPageNumber finds which page the line starts on
+    int startPageNumber = (y - (y % 8))/8;
+    // startBitNumber finds which bit the line starts on
+    int startBitNumber = y - (startPageNumber * 8);
+    // firstByteMask masks the bits in the first byte that are above the line
+    int firstByteMask = 0xFF << startBitNumber;
 
+    // if the line starts and ends in the same byte it will just display
+    // a full byte. This is because of the interaction between the firstByteMask
+    // and the lastByteMask
+    if((startBitNumber + h) > 8)
+    {
+        // remaining length in bits
+        int remainingLength = h - (8 - (y % 8));
+        // how many full 0xFF bytes are left
+        int remainingFullPages = (remainingLength - (remainingLength % 8)) / 8;
+        // last byte might not be 0xFF
+        int lastByte = h - ((remainingFullPages * 8 ) + ( 8 - startBitNumber));
+        // masks the bits in the last byte that are below the end of the line
+        int lastByteMask = 0xFF >> (8 - lastByte);
+        // fill the first byte
+        buffer[x + (128 * startPageNumber)] = (0xFF & firstByteMask);
 
-    
-    buffer[x + (128 * pageNumber)] = (0xFF & mask);
+        // fill the full pages in the middle
+        for(i = 1; i <= remainingFullPages; i++)
+        {
+            buffer[x + ((startPageNumber + i) * 128)] = 0xFF;
+        }
+
+        buffer[x + ((startPageNumber + remainingFullPages + 1) * 128)] = 0xFF & lastByteMask;
+    }
+    else
+    {
+        int endMask = 0xFF >> (8 - h);
+        int mask = firstByteMask & endMask;
+        buffer[x + (startPageNumber * 128)] = mask;
+    }
+
 }
 
 void drawChar(int c, int16_t x, int16_t y)
@@ -300,6 +338,43 @@ void drawChar(int c, int16_t x, int16_t y)
         buffer[(i + x) + (128 * y)] = font[i + (c * 5)];
     }
 }
+
+void drawChar15(unsigned char c[10][2], int16_t x, int16_t y)
+{
+    int i = 0;
+    int j = 0;
+    for(i = 0; i < 2; i++)
+    {
+        for(j = 0; j < 10; j++)
+        {
+            buffer[(j) + (128 * i)] = c[j][i];
+        }
+    }
+}
+
+/*
+    PAGE|COL 0 |COL 1 | ...  |COL 126|COL 127|
+    0   |      |      | ...  |       |       |
+    1   |      |      | ...  |       |       |
+    2   |      |      | ...  |       |       |
+    3   |      |      | ...  |       |       |
+    4   |      |      | ...  |       |       |
+    5   |      |      | ...  |       |       |
+    6   |      |      | ...  |       |       |
+    7   |      |      | ...  |       |       |
+
+
+    PAGE 0  | COL 0
+    ----------------
+            |   LSB
+            |   
+            |
+            |
+            |
+            |
+            |
+            |   MSB
+*/
 
 void display() 
 {
@@ -355,7 +430,7 @@ void app_main()
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display();
     clearDisplay();
-    VLine(10,10,1,WHITE);
+    drawChar15(test15,0,0);
     display();
     xTaskCreate(i2c_test_task, "i2c_test_task_0", 1024 * 2, (void *)0, 10, NULL);
 }
