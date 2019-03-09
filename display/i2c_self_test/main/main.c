@@ -339,7 +339,7 @@ void drawChar(int c, int16_t x, int16_t y)
     }
 }
 
-void drawChar15(unsigned char c[10][2], int16_t x, int16_t y)
+void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
 {
     int i = 0;
     int j = 0;
@@ -347,7 +347,7 @@ void drawChar15(unsigned char c[10][2], int16_t x, int16_t y)
     {
         for(j = 0; j < 10; j++)
         {
-            buffer[(j) + (128 * i)] = c[j][i];
+            buffer[(j + x) + (128 * (i + y))] = c[j][i];
         }
     }
 }
@@ -418,9 +418,55 @@ void display()
 
 static void i2c_test_task(void *arg)
 {
+    int i = 0;
     while(1)
     {
-        vTaskDelay(250 / portTICK_PERIOD_MS);
+        switch(i)
+        {
+            case 0:
+                drawChar16(zero16,0,0);
+                break;
+
+            case 1:
+                drawChar16(one16,0,0);
+                break;
+
+            case 2:
+                drawChar16(two16,0,0);
+                break;
+
+            case 3:
+                drawChar16(three16,0,0);
+                break;
+
+            case 4:
+                drawChar16(four16,0,0);
+                break;
+
+            case 5:
+                drawChar16(five16,0,0);
+                break;
+
+            case 6:
+                drawChar16(six16,0,0);
+                break;
+
+            case 7:
+                drawChar16(seven16,0,0);
+                break;
+
+            case 8:
+                drawChar16(eight16,0,0);
+                break;
+
+            case 9:
+                drawChar16(nine16,0,0);
+                i = -1;
+                break;
+        }
+        display();
+        i++;
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
@@ -430,7 +476,8 @@ void app_main()
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display();
     clearDisplay();
-    drawChar15(test15,0,0);
+    HLine(0,18,13,WHITE);
+    VLine(12,0,19,WHITE);
     display();
     xTaskCreate(i2c_test_task, "i2c_test_task_0", 1024 * 2, (void *)0, 10, NULL);
 }
