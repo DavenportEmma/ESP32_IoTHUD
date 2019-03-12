@@ -75,6 +75,47 @@ static const char *TAG = "i2c-example";
 #define SSD1306_ACTIVATE_SCROLL                      0x2F ///< Start scroll
 #define SSD1306_SET_VERTICAL_SCROLL_AREA             0xA3 ///< Set scroll range
 
+#define TEXT 16
+#if TEXT == 16
+    #define A A16
+    #define B B16
+    #define C C16
+    #define D D16
+    #define E E16
+    #define F F16
+    #define G G16
+    #define H H16
+    #define I I16
+    #define J J16
+    #define K K16
+    #define L L16
+    #define M M16
+    #define N N16
+    #define O O16
+    #define P P16
+    #define Q Q16
+    #define R R16
+    #define S S16
+    #define T T16
+    #define U U16
+    #define V V16
+    #define W W16
+    #define X X16
+    #define Y Y16
+    #define Z Z16
+    #define zero zero16
+    #define one one16
+    #define two two16
+    #define three three16
+    #define four four16
+    #define five five16
+    #define six six16
+    #define seven seven16
+    #define eight eight16
+    #define nine nine16
+    #define blank blank16
+#endif
+
 uint8_t *buffer;
 int8_t vccstate;
 uint8_t rotation = 0;
@@ -351,7 +392,6 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
         }
     }
 }
-
 /*
     PAGE|COL 0 |COL 1 | ...  |COL 126|COL 127|
     0   |      |      | ...  |       |       |
