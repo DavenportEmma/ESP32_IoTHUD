@@ -241,10 +241,12 @@ void clearDisplay()
 
 void begin(uint8_t vcs, uint8_t addr) 
 {
+
 	//if((!buffer) && !(buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8))))
     	//return false;
 
-    buffer = (uint8_t*) malloc(WIDTH * ((HEIGHT + 7) / 8));
+    //buffer = (uint8_t*) malloc(WIDTH * ((HEIGHT + 7) / 8));
+    buffer = (uint8_t*) pvPortMalloc(WIDTH * ((HEIGHT + 7) / 8));
 
 	clearDisplay();
 	vccstate = vcs;
@@ -285,6 +287,48 @@ void begin(uint8_t vcs, uint8_t addr)
   	command(SSD1306_DISPLAYON);				// / Main screen turn on
 }
 
+// sends the buffer contents to the display
+void display() 
+{
+    // initialises the display RAM
+	command(SSD1306_PAGEADDR);
+	command(0);
+	command(0xFF);
+	command(SSD1306_COLUMNADDR);
+	command(0);
+	command(WIDTH - 1);
+
+
+	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
+
+	uint8_t *ptr   = buffer;
+
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
+    uint8_t bytesOut = 1;
+    while(count--)
+    {
+    	if(bytesOut >= WIRE_MAX)
+    	{
+    		i2c_master_stop(cmd);
+    		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+            i2c_cmd_link_delete(cmd);
+    		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+            i2c_master_start(cmd);
+    		i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    		i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
+    		bytesOut = 1;
+    	}
+    	i2c_master_write_byte(cmd, *ptr++, ACK_CHECK_EN);
+        bytesOut++;
+    }
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+}
+
 void drawPixel(int16_t x, int16_t y, uint16_t colour)
 {
 	if((x >= 0) && (x < WIDTH && (y >= 0) && (y < HEIGHT))) 
@@ -310,7 +354,7 @@ void drawPixel(int16_t x, int16_t y, uint16_t colour)
 	    	case WHITE:   buffer[x + (y/8)*WIDTH] |=  (1 << (y&7)); break;
 	    	case BLACK:   buffer[x + (y/8)*WIDTH] &= ~(1 << (y&7)); break;
 	    	case INVERSE: buffer[x + (y/8)*WIDTH] ^=  (1 << (y&7)); break;
-    	}
+        }
 	}
 }
 
@@ -392,7 +436,7 @@ void VLine(int16_t x, int16_t y, int16_t h, uint16_t colour)
 
 // draw a character from the ascii.h file
 // characters in this file are 5x8b
-void drawChar(int c, int16_t x, int16_t y)
+void drawChar8(int c, int16_t x, int16_t y)
 {
     int i;
 
@@ -415,6 +459,46 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
         }
     }
 }
+
+void drawCharFromString(char c, int x, int y)
+{
+    if(c == '0')
+        drawChar16(zero16,x,y);
+    else if(c == '1')
+        drawChar16(one16,x,y);
+    else if(c == '2')
+        drawChar16(two16,x,y);
+    else if(c == '3')
+        drawChar16(three16,x,y);
+    else if(c == '4')
+        drawChar16(four16,x,y);
+    else if(c == '5')
+        drawChar16(five16,x,y);
+    else if(c == '6')
+        drawChar16(six16,x,y);
+    else if(c == '7')
+        drawChar16(seven16,x,y);
+    else if(c == '8')
+        drawChar16(eight16,x,y);
+    else if(c == '9')
+        drawChar16(nine16,x,y);
+    else
+        clearDisplay();
+}
+
+void drawString(char s[], int l)
+{
+    int i;
+    int x = 0;
+    int y = 0;
+    for(i = 0; i < l; i++)
+    {
+        drawCharFromString(s[i],x,y);
+        x = x + 12;
+    }
+    display();
+}
+
 /*
     PAGE|COL 0 |COL 1 | ...  |COL 126|COL 127|
     0   |      |      | ...  |       |       |
@@ -439,50 +523,11 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
             |   MSB
 */
 
-// sends the buffer contents to the display
-void display() 
-{
-    // initialises the display RAM
-	command(SSD1306_PAGEADDR);
-	command(0);
-	command(0xFF);
-	command(SSD1306_COLUMNADDR);
-	command(0);
-	command(WIDTH - 1);
 
-
-	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
-	uint8_t *ptr   = buffer;
-
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
-    uint8_t bytesOut = 1;
-    while(count--)
-    {
-    	if(bytesOut >= WIRE_MAX)
-    	{
-    		i2c_master_stop(cmd);
-    		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
-    		i2c_cmd_link_delete(cmd);
-
-    		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    		i2c_master_start(cmd);
-    		i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
-    		i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
-    		uint8_t bytesOut = 1;
-    	}
-    	i2c_master_write_byte(cmd, *ptr++, ACK_CHECK_EN);
-    	bytesOut++;
-    }
-    i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-}
-
+// this function deals with mqtt events
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
+    // get the client associated with the event
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
     // your_context_t *context = event->context;
@@ -514,9 +559,19 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
             break;
         case MQTT_EVENT_DATA:
+        // data event
+        /*  msg_id                  message id
+            topic                   pointer to the received topic
+            topic_len               length of the topic
+            data                    pointer to the received data
+            data_len                length of the data for this event
+            current_data_offset     offset of the current data for this event
+            total_data_len  total   length of the data received
+        */
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
+            drawString(event->data, event->data_len);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -550,11 +605,18 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 
 static void wifi_init(void)
 {
+    // initialises the underlying TCP/IP stack
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
+    // creates system event task and initialises event callback
     ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // initialise wifi resources for wifi driver;
+    // control structure, buffers
+    // start wifi task
+    // use default wifi configuration
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    // set wifi api configuration storage type
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
@@ -562,27 +624,47 @@ static void wifi_init(void)
             .password = "8w2knZfjpdyb",
         },
     };
+    // set operating mode set to station
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    // set configuration of the STA
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_LOGI(TAG, "start the WIFI SSID:[%s]", "VM0196906");
+    // start wifi according to current config mode
+    // if STA it creates a station control block and starts the station
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_LOGI(TAG, "Waiting for wifi");
+    /*  xEventGroupWaitBits(event_group, 
+                            bits_to_wait_for,
+                            clear_on_exit,
+                            wait_for_all_bits,
+                            ticks_to_wait)
+        this will wait for the connected bit in the wifi event group
+        to be asserted. It will not be cleared when the function returns*/
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
 }
 
 static void mqtt_app_start(void)
 {
+    // set configuration for mqtt
     const esp_mqtt_client_config_t mqtt_cfg = {
         .uri = "mqtt://broker.mqttdashboard.com",
+        // mqtt event handler
         .event_handle = mqtt_event_handler,
         // .user_context = (void *)your_context
     };
 
+    #if CONFIG_BROKER_URL_FROM_STDIN
+    char line[128];
+
+#endif /* CONFIG_BROKER_URL_FROM_STDIN */
+    // initialise mqtt client with set config
+    // returns client handle
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    // start mqtt client
     esp_mqtt_client_start(client);
 }
 
-static void i2c_test_task(void *arg)
+void i2c_test_task()
 {
     int i = 0;
     while(1)
@@ -632,24 +714,26 @@ static void i2c_test_task(void *arg)
         }
         display();
         i++;
+        vTaskDelay( 100 / portTICK_PERIOD_MS);
     }
+    vTaskDelete(NULL);
 }
 
-void app_main()
+void emptyTask(void *arg)
 {
-    ESP_ERROR_CHECK(i2c_master_init());
-    begin(SSD1306_SWITCHCAPVCC, 0x3C);
-    display();
-    clearDisplay();
-    HLine(0,18,13,WHITE);
-    VLine(12,0,19,WHITE);
-    drawChar16(H,0,3);
-    drawChar16(E,11,3);
-    drawChar16(L,22,3);
-    drawChar16(L,33,3);
-    drawChar16(O,44,3);
-    display();
+    int i = 0;
+    while(1)
+    {
+        printf("%d", i);
+        i++;
+        ESP_LOGI(TAG, "empty task");
+        vTaskDelay( 500 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+}
 
+void app_main() // vTaskStartScheduler is created here
+{
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
@@ -666,5 +750,16 @@ void app_main()
     wifi_init();
     mqtt_app_start();
 
-    //xTaskCreate(i2c_test_task, "i2c_test_task_0", 1024 * 2, (void *)0, 10, NULL);
+    ESP_ERROR_CHECK(i2c_master_init());
+    begin(SSD1306_SWITCHCAPVCC, 0x3C);
+    drawPixel(127,0,WHITE);
+    display();
+
+    //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
+    //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
+
+    while(1)
+    {
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
 }

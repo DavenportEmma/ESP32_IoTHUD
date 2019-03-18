@@ -32,7 +32,7 @@ deps_config := \
 	/home/conor/esp/esp-idf/components/app_update/Kconfig.projbuild \
 	/home/conor/esp/esp-idf/components/bootloader/Kconfig.projbuild \
 	/home/conor/esp/esp-idf/components/esptool_py/Kconfig.projbuild \
-	/home/conor/esp/i2c_self_test/main/Kconfig.projbuild \
+	/home/conor/esp/ESP32_IoTHUD/display/mqtt/main/Kconfig.projbuild \
 	/home/conor/esp/esp-idf/components/partition_table/Kconfig.projbuild \
 	/home/conor/esp/esp-idf/Kconfig
 
