@@ -17,6 +17,9 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
  /home/conor/esp/esp-idf/components/newlib/include/machine/types.h \
  /home/conor/esp/esp-idf/components/newlib/include/sys/sched.h \
  /home/conor/esp/esp-idf/components/newlib/include/sys/stdio.h \
+ /home/conor/esp/esp-idf/components/newlib/include/stdlib.h \
+ /home/conor/esp/esp-idf/components/newlib/include/machine/stdlib.h \
+ /home/conor/esp/esp-idf/components/newlib/include/alloca.h \
  /home/conor/esp/esp-idf/components/newlib/include/stdint.h \
  /home/conor/esp/esp-idf/components/newlib/include/sys/_intsup.h \
  /home/conor/esp/esp-idf/components/newlib/include/string.h \
@@ -35,9 +38,6 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
  /home/conor/esp/esp-idf/components/freertos/include/freertos/xtensa_context.h \
  /home/conor/esp/esp-idf/components/esp32/include/xtensa/corebits.h \
  /home/conor/esp/esp-idf/components/esp32/include/xtensa/xtruntime-frames.h \
- /home/conor/esp/esp-idf/components/newlib/include/stdlib.h \
- /home/conor/esp/esp-idf/components/newlib/include/machine/stdlib.h \
- /home/conor/esp/esp-idf/components/newlib/include/alloca.h \
  /home/conor/esp/esp-idf/components/esp32/include/rom/ets_sys.h \
  /home/conor/esp/esp-idf/components/soc/esp32/include/soc/soc.h \
  /home/conor/esp/esp-idf/components/esp32/include/esp_assert.h \
@@ -148,7 +148,8 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
  /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/ascii.h \
  /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/font16px.h \
  /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_client.h \
- /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_config.h
+ /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_config.h \
+ /home/conor/esp/esp-idf/components/jsmn/include/jsmn.h
 
 /home/conor/esp/esp-idf/components/newlib/include/stdio.h:
 
@@ -186,6 +187,12 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
 
 /home/conor/esp/esp-idf/components/newlib/include/sys/stdio.h:
 
+/home/conor/esp/esp-idf/components/newlib/include/stdlib.h:
+
+/home/conor/esp/esp-idf/components/newlib/include/machine/stdlib.h:
+
+/home/conor/esp/esp-idf/components/newlib/include/alloca.h:
+
 /home/conor/esp/esp-idf/components/newlib/include/stdint.h:
 
 /home/conor/esp/esp-idf/components/newlib/include/sys/_intsup.h:
@@ -221,12 +228,6 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
 /home/conor/esp/esp-idf/components/esp32/include/xtensa/corebits.h:
 
 /home/conor/esp/esp-idf/components/esp32/include/xtensa/xtruntime-frames.h:
-
-/home/conor/esp/esp-idf/components/newlib/include/stdlib.h:
-
-/home/conor/esp/esp-idf/components/newlib/include/machine/stdlib.h:
-
-/home/conor/esp/esp-idf/components/newlib/include/alloca.h:
 
 /home/conor/esp/esp-idf/components/esp32/include/rom/ets_sys.h:
 
@@ -449,4 +450,6 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
 /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_client.h:
 
 /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_config.h:
+
+/home/conor/esp/esp-idf/components/jsmn/include/jsmn.h:
 /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/./main.c:

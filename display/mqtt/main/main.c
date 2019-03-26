@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -20,12 +21,14 @@
 #include "font16px.h"
 #include "sdkconfig.h"
 #include "mqtt_client.h"
+#include "jsmn.h"
 
 static const char *TAG = "MQTTWS_I2C_DISPLAY";
 
 static EventGroupHandle_t wifi_event_group;
-const static int CONNECTED_BIT = BIT0;
+ static int CONNECTED_BIT = BIT0;
 
+static char *JSON_STRING = "{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  ""\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -620,8 +623,10 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = "VM0196906",
-            .password = "8w2knZfjpdyb",
+            //.ssid = "VM0196906",
+            //.password = "8w2knZfjpdyb",
+            .ssid = "Conor's phone",
+            .password = "password12345",
         },
     };
     // set operating mode set to station
@@ -664,7 +669,87 @@ static void mqtt_app_start(void)
     esp_mqtt_client_start(client);
 }
 
-void i2c_test_task()
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) 
+{
+	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+			strncmp(json + tok->start, s, tok->end - tok->start) == 0) 
+    {
+		return 0;
+	}
+	return -1;
+}
+
+int parseJSON() 
+{
+	int i;
+	int r;
+	jsmn_parser p;
+	jsmntok_t t[128]; /* We expect no more than 128 tokens */
+
+	jsmn_init(&p);
+	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
+	if (r < 0) 
+    {
+		printf("Failed to parse JSON: %d\n", r);
+		return 1;
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) 
+    {
+		printf("Object expected\n");
+		return 1;
+	}
+
+	/* Loop over all keys of the root object */
+	for (i = 1; i < r; i++) 
+    {
+		if (jsoneq(JSON_STRING, &t[i], "user") == 0) 
+        {
+			/* We may use strndup() to fetch string value */
+			printf("- User: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			i++;
+		} 
+        else if (jsoneq(JSON_STRING, &t[i], "admin") == 0) 
+        {
+			/* We may additionally check if the value is either "true" or "false" */
+			printf("- Admin: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			i++;
+		} 
+        else if (jsoneq(JSON_STRING, &t[i], "uid") == 0) 
+        {
+			/* We may want to do strtol() here to get numeric value */
+			printf("- UID: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			i++;
+		} 
+        else if (jsoneq(JSON_STRING, &t[i], "groups") == 0) 
+        {
+			int j;
+			printf("- Groups:\n");
+			if (t[i+1].type != JSMN_ARRAY) 
+            {
+				continue; /* We expect groups to be an array of strings */
+			}
+			for (j = 0; j < t[i+1].size; j++) 
+            {
+				jsmntok_t *g = &t[i+j+2];
+				printf("  * %.*s\n", g->end - g->start, JSON_STRING + g->start);
+			}
+			i += t[i+1].size + 1;
+		} 
+        else 
+        {
+			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
+					JSON_STRING + t[i].start);
+		}
+	}
+	return EXIT_SUCCESS;
+}
+
+void i2c_testvTaskDelay_task()
 {
     int i = 0;
     while(1)
@@ -732,6 +817,16 @@ void emptyTask(void *arg)
     vTaskDelete(NULL);
 }
 
+void parseJSONTask(void *arg)
+{
+    parseJSON();
+    while(1)
+    {
+        vTaskDelay( 500 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+}
+
 void app_main() // vTaskStartScheduler is created here
 {
     ESP_LOGI(TAG, "[APP] Startup..");
@@ -752,9 +847,9 @@ void app_main() // vTaskStartScheduler is created here
 
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
-    drawPixel(127,0,WHITE);
     display();
 
+    xTaskCreate(&parseJSONTask, "parse JSON taslk", 4096, NULL, 5, NULL);
     //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
     //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
 
