@@ -527,148 +527,6 @@ void drawString(char s[], int l)
 */
 
 
-// this function deals with mqtt events
-static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
-{
-    // get the client associated with the event
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
-    // your_context_t *context = event->context;
-    switch (event->event_id) {
-        case MQTT_EVENT_CONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-            ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
-            break;
-        case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-            break;
-
-        case MQTT_EVENT_SUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-            msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
-            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-            break;
-        case MQTT_EVENT_UNSUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
-            break;
-        case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
-            break;
-        case MQTT_EVENT_DATA:
-        // data event
-        /*  msg_id                  message id
-            topic                   pointer to the received topic
-            topic_len               length of the topic
-            data                    pointer to the received data
-            data_len                length of the data for this event
-            current_data_offset     offset of the current data for this event
-            total_data_len  total   length of the data received
-        */
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
-            drawString(event->data, event->data_len);
-            break;
-        case MQTT_EVENT_ERROR:
-            ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-            break;
-        default:
-            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
-            break;
-    }
-    return ESP_OK;
-}
-
-static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
-{
-    switch (event->event_id) {
-        case SYSTEM_EVENT_STA_START:
-            esp_wifi_connect();
-            break;
-        case SYSTEM_EVENT_STA_GOT_IP:
-            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-
-            break;
-        case SYSTEM_EVENT_STA_DISCONNECTED:
-            esp_wifi_connect();
-            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
-            break;
-        default:
-            break;
-    }
-    return ESP_OK;
-}
-
-static void wifi_init(void)
-{
-    // initialises the underlying TCP/IP stack
-    tcpip_adapter_init();
-    wifi_event_group = xEventGroupCreate();
-    // creates system event task and initialises event callback
-    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    // initialise wifi resources for wifi driver;
-    // control structure, buffers
-    // start wifi task
-    // use default wifi configuration
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    // set wifi api configuration storage type
-    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-    wifi_config_t wifi_config = {
-        .sta = {
-            //.ssid = "VM0196906",
-            //.password = "8w2knZfjpdyb",
-            .ssid = "Conor's phone",
-            .password = "password12345",
-        },
-    };
-    // set operating mode set to station
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    // set configuration of the STA
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_LOGI(TAG, "start the WIFI SSID:[%s]", "VM0196906");
-    // start wifi according to current config mode
-    // if STA it creates a station control block and starts the station
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_LOGI(TAG, "Waiting for wifi");
-    /*  xEventGroupWaitBits(event_group, 
-                            bits_to_wait_for,
-                            clear_on_exit,
-                            wait_for_all_bits,
-                            ticks_to_wait)
-        this will wait for the connected bit in the wifi event group
-        to be asserted. It will not be cleared when the function returns*/
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
-}
-
-static void mqtt_app_start(void)
-{
-    // set configuration for mqtt
-    const esp_mqtt_client_config_t mqtt_cfg = {
-        .uri = "mqtt://broker.mqttdashboard.com",
-        // mqtt event handler
-        .event_handle = mqtt_event_handler,
-        // .user_context = (void *)your_context
-    };
-
-    #if CONFIG_BROKER_URL_FROM_STDIN
-    char line[128];
-
-#endif /* CONFIG_BROKER_URL_FROM_STDIN */
-    // initialise mqtt client with set config
-    // returns client handle
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    // start mqtt client
-    esp_mqtt_client_start(client);
-}
-
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) 
 {
 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
@@ -686,9 +544,15 @@ int parseJSON()
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
 
+    // initialises parser
+    // sets current position in json string to 0
+    // sets next token to allocate to 0
+    // sets parent token to -1
 	jsmn_init(&p);
+
+    // parse json string and fill tokens
 	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
-	if (r < 0) 
+	if (r < 0)  // error 
     {
 		printf("Failed to parse JSON: %d\n", r);
 		return 1;
@@ -749,59 +613,149 @@ int parseJSON()
 	return EXIT_SUCCESS;
 }
 
-void i2c_testvTaskDelay_task()
+// this function deals with mqtt events
+static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
-    int i = 0;
-    while(1)
-    {
-        switch(i)
-        {
-            case 0:
-                drawChar16(zero16,0,0);
-                break;
+    // get the client associated with the event
+    esp_mqtt_client_handle_t client = event->client;
+    int msg_id;
+    // your_context_t *context = event->context;
+    switch (event->event_id) {
+        case MQTT_EVENT_CONNECTED:
+            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+            msg_id = esp_mqtt_client_subscribe(client, "/topic/conor0", 0);
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-            case 1:
-                drawChar16(one16,0,0);
-                break;
+            msg_id = esp_mqtt_client_subscribe(client, "/topic/conor1", 1);
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-            case 2:
-                drawChar16(two16,0,0);
-                break;
+            msg_id = esp_mqtt_client_unsubscribe(client, "/topic/conor1");
+            ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+            break;
+        case MQTT_EVENT_DISCONNECTED:
+            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+            break;
 
-            case 3:
-                drawChar16(three16,0,0);
-                break;
-
-            case 4:
-                drawChar16(four16,0,0);
-                break;
-
-            case 5:
-                drawChar16(five16,0,0);
-                break;
-
-            case 6:
-                drawChar16(six16,0,0);
-                break;
-
-            case 7:
-                drawChar16(seven16,0,0);
-                break;
-
-            case 8:
-                drawChar16(eight16,0,0);
-                break;
-
-            case 9:
-                drawChar16(nine16,0,0);
-                i = -1;
-                break;
-        }
-        display();
-        i++;
-        vTaskDelay( 100 / portTICK_PERIOD_MS);
+        case MQTT_EVENT_SUBSCRIBED:
+            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+            msg_id = esp_mqtt_client_publish(client, "/topic/conor0", "data", 0, 0, 0);
+            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+            break;
+        case MQTT_EVENT_UNSUBSCRIBED:
+            ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+            break;
+        case MQTT_EVENT_PUBLISHED:
+            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            break;
+        case MQTT_EVENT_DATA:
+        // data event
+        /*  msg_id                  message id
+            topic                   pointer to the received topic
+            topic_len               length of the topic
+            data                    pointer to the received data
+            data_len                length of the data for this event
+            current_data_offset     offset of the current data for this event
+            total_data_len  total   length of the data received
+        */
+            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            printf("DATA=%.*s\r\n", event->data_len, event->data);
+            JSON_STRING = event->data;
+            parseJSON();
+            //drawString(event->data, event->data_len);
+            break;
+        case MQTT_EVENT_ERROR:
+            ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
+            break;
+        default:
+            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+            break;
     }
-    vTaskDelete(NULL);
+    
+    return ESP_OK;
+}
+
+static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
+{
+    switch (event->event_id) {
+        case SYSTEM_EVENT_STA_START:
+            esp_wifi_connect();
+            break;
+        case SYSTEM_EVENT_STA_GOT_IP:
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+
+            break;
+        case SYSTEM_EVENT_STA_DISCONNECTED:
+            esp_wifi_connect();
+            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+            break;
+        default:
+            break;
+    }
+    return ESP_OK;
+}
+
+static void wifi_init(void)
+{
+    // initialises the underlying TCP/IP stack
+    tcpip_adapter_init();
+    wifi_event_group = xEventGroupCreate();
+    // creates system event task and initialises event callback
+    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // initialise wifi resources for wifi driver;
+    // control structure, buffers
+    // start wifi task
+    // use default wifi configuration
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    // set wifi api configuration storage type
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = "VM0196906",
+            .password = "8w2knZfjpdyb",
+            //.ssid = "Conor's phone",
+            //.password = "password12345",
+        },
+    };
+    // set operating mode set to station
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    // set configuration of the STA
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_LOGI(TAG, "start the WIFI SSID:[%s]", "VM0196906");
+    // start wifi according to current config mode
+    // if STA it creates a station control block and starts the station
+    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_LOGI(TAG, "Waiting for wifi");
+    /*  xEventGroupWaitBits(event_group, 
+                            bits_to_wait_for,
+                            clear_on_exit,
+                            wait_for_all_bits,
+                            ticks_to_wait)
+        this will wait for the connected bit in the wifi event group
+        to be asserted. It will not be cleared when the function returns*/
+    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+}
+
+static void mqtt_app_start(void)
+{
+    // set configuration for mqtt
+    const esp_mqtt_client_config_t mqtt_cfg = {
+        .uri = "mqtt://broker.mqttdashboard.com",
+        // mqtt event handler
+        .event_handle = mqtt_event_handler,
+        // .user_context = (void *)your_context
+    };
+
+    #if CONFIG_BROKER_URL_FROM_STDIN
+    char line[128];
+
+#endif /* CONFIG_BROKER_URL_FROM_STDIN */
+    // initialise mqtt client with set config
+    // returns client handle
+    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    // start mqtt client
+    esp_mqtt_client_start(client);
 }
 
 void emptyTask(void *arg)
@@ -849,7 +803,7 @@ void app_main() // vTaskStartScheduler is created here
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display();
 
-    xTaskCreate(&parseJSONTask, "parse JSON taslk", 4096, NULL, 5, NULL);
+    //xTaskCreate(&parseJSONTask, "parse JSON task", 4096, NULL, 5, NULL);
     //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
     //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
 
