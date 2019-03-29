@@ -26,7 +26,7 @@
 static const char *TAG = "MQTTWS_I2C_DISPLAY";
 
 static EventGroupHandle_t wifi_event_group;
- static int CONNECTED_BIT = BIT0;
+static int CONNECTED_BIT = BIT0;
 
 static char *JSON_STRING = "{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  ""\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
 
@@ -527,7 +527,7 @@ void drawString(char s[], int l)
 */
 
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) 
+static int jsoneq(char *json, jsmntok_t *tok, const char *s) 
 {
 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
 			strncmp(json + tok->start, s, tok->end - tok->start) == 0) 
@@ -712,10 +712,10 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = "VM0196906",
-            .password = "8w2knZfjpdyb",
-            //.ssid = "Conor's phone",
-            //.password = "password12345",
+            //.ssid = "VM0196906",
+            //.password = "8w2knZfjpdyb",
+            .ssid = "Conor's phone",
+            .password = "password12345",
         },
     };
     // set operating mode set to station
