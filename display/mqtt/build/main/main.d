@@ -149,7 +149,11 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
  /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/font16px.h \
  /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_client.h \
  /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_config.h \
- /home/conor/esp/esp-idf/components/jsmn/include/jsmn.h
+ /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/../parson/parson.h \
+ /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/../parson/parson.c \
+ /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/../parson/parson.h \
+ /home/conor/esp/esp-idf/components/newlib/include/ctype.h \
+ /home/conor/esp/esp-idf/components/newlib/include/math.h
 
 /home/conor/esp/esp-idf/components/newlib/include/stdio.h:
 
@@ -451,5 +455,13 @@ main.o: /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/main.c \
 
 /home/conor/esp/esp-idf/components/mqtt/esp-mqtt/include/mqtt_config.h:
 
-/home/conor/esp/esp-idf/components/jsmn/include/jsmn.h:
+/home/conor/esp/ESP32_IoTHUD/display/mqtt/main/../parson/parson.h:
+
+/home/conor/esp/ESP32_IoTHUD/display/mqtt/main/../parson/parson.c:
+
+/home/conor/esp/ESP32_IoTHUD/display/mqtt/main/../parson/parson.h:
+
+/home/conor/esp/esp-idf/components/newlib/include/ctype.h:
+
+/home/conor/esp/esp-idf/components/newlib/include/math.h:
 /home/conor/esp/ESP32_IoTHUD/display/mqtt/main/./main.c:

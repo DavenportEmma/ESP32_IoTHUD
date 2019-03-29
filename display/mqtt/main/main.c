@@ -21,14 +21,16 @@
 #include "font16px.h"
 #include "sdkconfig.h"
 #include "mqtt_client.h"
-#include "jsmn.h"
+#include "../parson/parson.h"
+#include "../parson/parson.c"
 
 static const char *TAG = "MQTTWS_I2C_DISPLAY";
 
 static EventGroupHandle_t wifi_event_group;
 static int CONNECTED_BIT = BIT0;
 
-static char *JSON_STRING = "{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  ""\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
+char *JSON_STRING = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -527,90 +529,19 @@ void drawString(char s[], int l)
 */
 
 
-static int jsoneq(char *json, jsmntok_t *tok, const char *s) 
+void parseJSON()
 {
-	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-			strncmp(json + tok->start, s, tok->end - tok->start) == 0) 
-    {
-		return 0;
-	}
-	return -1;
-}
-
-int parseJSON() 
-{
-	int i;
-	int r;
-	jsmn_parser p;
-	jsmntok_t t[128]; /* We expect no more than 128 tokens */
-
-    // initialises parser
-    // sets current position in json string to 0
-    // sets next token to allocate to 0
-    // sets parent token to -1
-	jsmn_init(&p);
-
-    // parse json string and fill tokens
-	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
-	if (r < 0)  // error 
-    {
-		printf("Failed to parse JSON: %d\n", r);
-		return 1;
-	}
-
-	/* Assume the top-level element is an object */
-	if (r < 1 || t[0].type != JSMN_OBJECT) 
-    {
-		printf("Object expected\n");
-		return 1;
-	}
-
-	/* Loop over all keys of the root object */
-	for (i = 1; i < r; i++) 
-    {
-		if (jsoneq(JSON_STRING, &t[i], "user") == 0) 
-        {
-			/* We may use strndup() to fetch string value */
-			printf("- User: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} 
-        else if (jsoneq(JSON_STRING, &t[i], "admin") == 0) 
-        {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("- Admin: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} 
-        else if (jsoneq(JSON_STRING, &t[i], "uid") == 0) 
-        {
-			/* We may want to do strtol() here to get numeric value */
-			printf("- UID: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} 
-        else if (jsoneq(JSON_STRING, &t[i], "groups") == 0) 
-        {
-			int j;
-			printf("- Groups:\n");
-			if (t[i+1].type != JSMN_ARRAY) 
-            {
-				continue; /* We expect groups to be an array of strings */
-			}
-			for (j = 0; j < t[i+1].size; j++) 
-            {
-				jsmntok_t *g = &t[i+j+2];
-				printf("  * %.*s\n", g->end - g->start, JSON_STRING + g->start);
-			}
-			i += t[i+1].size + 1;
-		} 
-        else 
-        {
-			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
-					JSON_STRING + t[i].start);
-		}
-	}
-	return EXIT_SUCCESS;
+    printf("enter parser\n");
+    JSON_Value *root_value;
+    JSON_Object *data;
+    printf("created variables\n");
+    root_value = json_parse_string(JSON_STRING);
+    printf("parsed string\n");
+	data = json_value_get_object(root_value);
+    printf("object gotten\n");
+	/*printf("%s\n",json_object_get_string(data, "name"));
+	printf("%f\n",json_object_get_number(data, "age"));
+	printf("%d\n",json_object_get_boolean(data, "admin"));*/
 }
 
 // this function deals with mqtt events
@@ -660,9 +591,10 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
+            printf("message recieved\n");
             JSON_STRING = event->data;
+            printf("message copied\n");
             parseJSON();
-            //drawString(event->data, event->data_len);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -712,10 +644,10 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            //.ssid = "VM0196906",
-            //.password = "8w2knZfjpdyb",
-            .ssid = "Conor's phone",
-            .password = "password12345",
+            .ssid = "VM0196906",
+            .password = "8w2knZfjpdyb",
+            //.ssid = "Conor's phone",
+            //.password = "password12345",
         },
     };
     // set operating mode set to station
@@ -766,16 +698,6 @@ void emptyTask(void *arg)
         printf("%d", i);
         i++;
         ESP_LOGI(TAG, "empty task");
-        vTaskDelay( 500 / portTICK_PERIOD_MS);
-    }
-    vTaskDelete(NULL);
-}
-
-void parseJSONTask(void *arg)
-{
-    parseJSON();
-    while(1)
-    {
         vTaskDelay( 500 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
