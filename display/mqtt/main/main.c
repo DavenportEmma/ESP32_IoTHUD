@@ -29,8 +29,7 @@ static const char *TAG = "MQTTWS_I2C_DISPLAY";
 static EventGroupHandle_t wifi_event_group;
 static int CONNECTED_BIT = BIT0;
 
-char *JSON_STRING = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
-
+char JSON_STRING[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -529,19 +528,36 @@ void drawString(char s[], int l)
 */
 
 
-void parseJSON()
+void parseJSON(char *js)
 {
-    printf("enter parser\n");
+    printf("%s\n",js);
+    //printf("enter parser\n");
     JSON_Value *root_value;
     JSON_Object *data;
-    printf("created variables\n");
-    root_value = json_parse_string(JSON_STRING);
-    printf("parsed string\n");
+    //printf("created variables\n");
+    root_value = json_parse_string(js);
+    //printf("parsed string\n");
 	data = json_value_get_object(root_value);
-    printf("object gotten\n");
-	/*printf("%s\n",json_object_get_string(data, "name"));
+    if(data == NULL)
+    {
+        //printf("null object\n");
+        return;
+    }
+    //printf("object gotten\n");
+	printf("%s\n",json_object_get_string(data, "name"));
 	printf("%f\n",json_object_get_number(data, "age"));
-	printf("%d\n",json_object_get_boolean(data, "admin"));*/
+	printf("%d\n",json_object_get_boolean(data, "admin"));
+}
+
+void parseJSONTask(void *arg)
+{
+    int i;
+    while(1)
+    {
+        parseJSON((char *)arg); 
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
 }
 
 // this function deals with mqtt events
@@ -549,7 +565,9 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
     // get the client associated with the event
     esp_mqtt_client_handle_t client = event->client;
+    //char *JSON_STRING = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
     int msg_id;
+    char message[256];
     // your_context_t *context = event->context;
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
@@ -569,8 +587,8 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-            msg_id = esp_mqtt_client_publish(client, "/topic/conor0", "data", 0, 0, 0);
-            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+            //msg_id = esp_mqtt_client_publish(client, "/topic/conor0", "data", 0, 0, 0);
+            //ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
             break;
         case MQTT_EVENT_UNSUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -591,10 +609,12 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
-            printf("message recieved\n");
-            JSON_STRING = event->data;
-            printf("message copied\n");
-            parseJSON();
+            strncpy(message, event->data, event->data_len);
+            message[event->data_len] = '\0';
+            printf("%s\n",message);
+            strncpy(JSON_STRING, event->data, event->data_len);
+            JSON_STRING[event->data_len] = '\0';
+            printf("%s\n",JSON_STRING);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -725,10 +745,9 @@ void app_main() // vTaskStartScheduler is created here
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display();
 
-    //xTaskCreate(&parseJSONTask, "parse JSON task", 4096, NULL, 5, NULL);
     //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
     //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
-
+    xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)JSON_STRING, 5, NULL);
     while(1)
     {
         vTaskDelay(500 / portTICK_PERIOD_MS);
