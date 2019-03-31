@@ -30,7 +30,14 @@ static EventGroupHandle_t wifi_event_group;
 static SemaphoreHandle_t xSemaphore = NULL;
 static int CONNECTED_BIT = BIT0;
 
-char JSON_STRING[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+char jsonString[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+
+static struct jsonStruct
+{
+    char name[256];
+    int age;
+    bool admin;
+};
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -527,7 +534,18 @@ void drawString(char s[], int l)
             |
             |   MSB
 */
-
+void fillStruct(char n[256], int a, bool admin)
+{
+    // take semaphore xSemaphore and will wait indefinitely
+    // for the semaphore to become available
+    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    
+    strncpy(jsonStruct.name, n, 256)
+    jsonStruct.name[255] = '\0';
+    jsonStruct.age = a;
+    jsonStruct.admin = admin;
+    xSemaphoreGive(xSemaphore);
+}
 
 void parseJSON(char *js)
 {
@@ -544,7 +562,7 @@ void parseJSON(char *js)
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
 
-    
+    fillStruct(name, age, admin);
 }
 
 void parseJSONTask(void *arg)
@@ -562,7 +580,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
     // get the client associated with the event
     esp_mqtt_client_handle_t client = event->client;
-    //char *JSON_STRING = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+    //char *jsonString = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
     int msg_id;
     char message[256];
     // your_context_t *context = event->context;
@@ -609,9 +627,9 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             strncpy(message, event->data, event->data_len);
             message[event->data_len] = '\0';
             printf("%s\n",message);
-            strncpy(JSON_STRING, event->data, event->data_len);
-            JSON_STRING[event->data_len] = '\0';
-            parseJSON(JSON_STRING);
+            strncpy(jsonString, event->data, event->data_len);
+            jsonString[event->data_len] = '\0';
+            parseJSON(jsonString);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -722,6 +740,7 @@ void emptyTask(void *arg)
 
 void app_main() // vTaskStartScheduler is created here
 {
+    // create binary semaphore, returns handle
     xSemaphore = xSemaphoreCreateBinary();
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
@@ -745,7 +764,7 @@ void app_main() // vTaskStartScheduler is created here
 
     //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
     //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
-    //xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)JSON_STRING, 5, NULL);
+    //xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)jsonString, 5, NULL);
     while(1)
     {
         vTaskDelay(500 / portTICK_PERIOD_MS);
