@@ -27,6 +27,7 @@
 static const char *TAG = "MQTTWS_I2C_DISPLAY";
 
 static EventGroupHandle_t wifi_event_group;
+static SemaphoreHandle_t xSemaphore = NULL;
 static int CONNECTED_BIT = BIT0;
 
 char JSON_STRING[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
@@ -551,7 +552,6 @@ void parseJSON(char *js)
 
 void parseJSONTask(void *arg)
 {
-    int i;
     while(1)
     {
         parseJSON((char *)arg); 
@@ -614,7 +614,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             printf("%s\n",message);
             strncpy(JSON_STRING, event->data, event->data_len);
             JSON_STRING[event->data_len] = '\0';
-            printf("%s\n",JSON_STRING);
+            parseJSON(JSON_STRING);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -747,7 +747,7 @@ void app_main() // vTaskStartScheduler is created here
 
     //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
     //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
-    xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)JSON_STRING, 5, NULL);
+    //xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)JSON_STRING, 5, NULL);
     while(1)
     {
         vTaskDelay(500 / portTICK_PERIOD_MS);
