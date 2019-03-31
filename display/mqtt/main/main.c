@@ -532,22 +532,19 @@ void drawString(char s[], int l)
 void parseJSON(char *js)
 {
     printf("%s\n",js);
-    //printf("enter parser\n");
     JSON_Value *root_value;
     JSON_Object *data;
-    //printf("created variables\n");
     root_value = json_parse_string(js);
-    //printf("parsed string\n");
 	data = json_value_get_object(root_value);
     if(data == NULL)
     {
-        //printf("null object\n");
         return;
     }
-    //printf("object gotten\n");
 	printf("%s\n",json_object_get_string(data, "name"));
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
+
+    
 }
 
 void parseJSONTask(void *arg)
@@ -725,6 +722,7 @@ void emptyTask(void *arg)
 
 void app_main() // vTaskStartScheduler is created here
 {
+    xSemaphore = xSemaphoreCreateBinary();
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
