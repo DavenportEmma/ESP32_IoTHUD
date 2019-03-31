@@ -37,7 +37,7 @@ static struct jsonStruct
     char name[256];
     int age;
     bool admin;
-};
+} myJsonStruct;
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -534,16 +534,23 @@ void drawString(char s[], int l)
             |
             |   MSB
 */
+void jsonStructInit()
+{
+    myJsonStruct.name[0] = '\0';
+    myJsonStruct.age = 0;
+    myJsonStruct.admin = false;
+}
+
 void fillStruct(char n[256], int a, bool admin)
 {
     // take semaphore xSemaphore and will wait indefinitely
     // for the semaphore to become available
     xSemaphoreTake(xSemaphore,portMAX_DELAY);
     
-    strncpy(jsonStruct.name, n, 256)
-    jsonStruct.name[255] = '\0';
-    jsonStruct.age = a;
-    jsonStruct.admin = admin;
+    strncpy(myJsonStruct.name, n, 256);
+    myJsonStruct.name[255] = '\0';
+    myJsonStruct.age = a;
+    myJsonStruct.admin = admin;
     xSemaphoreGive(xSemaphore);
 }
 
@@ -562,7 +569,9 @@ void parseJSON(char *js)
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
 
-    fillStruct(name, age, admin);
+    fillStruct( json_object_get_string(data, "name"), 
+                json_object_get_number(data, "age"), 
+                json_object_get_boolean(data, "admin"));
 }
 
 void parseJSONTask(void *arg)
@@ -727,13 +736,16 @@ static void mqtt_app_start(void)
 
 void emptyTask(void *arg)
 {
-    int i = 0;
+
     while(1)
     {
-        printf("%d", i);
-        i++;
-        ESP_LOGI(TAG, "empty task");
-        vTaskDelay( 500 / portTICK_PERIOD_MS);
+        xSemaphoreTake(xSemaphore,portMAX_DELAY);
+        printf("%s\t%i\t%d\n",
+            myJsonStruct.name,
+            myJsonStruct.age,
+            myJsonStruct.admin);
+        xSemaphoreGive(xSemaphore);
+        vTaskDelay( 2000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -757,6 +769,7 @@ void app_main() // vTaskStartScheduler is created here
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
+    jsonStructInit();
 
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
