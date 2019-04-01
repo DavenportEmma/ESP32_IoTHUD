@@ -474,35 +474,63 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
 
 void drawCharFromString(char c, int x, int y)
 {
-    if(c == '0')
-        drawChar16(zero16,x,y);
-    else if(c == '1')
-        drawChar16(one16,x,y);
-    else if(c == '2')
-        drawChar16(two16,x,y);
-    else if(c == '3')
-        drawChar16(three16,x,y);
-    else if(c == '4')
-        drawChar16(four16,x,y);
-    else if(c == '5')
-        drawChar16(five16,x,y);
-    else if(c == '6')
-        drawChar16(six16,x,y);
-    else if(c == '7')
-        drawChar16(seven16,x,y);
-    else if(c == '8')
-        drawChar16(eight16,x,y);
-    else if(c == '9')
-        drawChar16(nine16,x,y);
-    else
-        clearDisplay();
+    switch(c)
+    {
+        case '0': drawChar16(zero,x,y);       break;
+        case '1': drawChar16(one,x,y);        break;
+        case '2': drawChar16(two,x,y);        break;
+        case '3': drawChar16(three,x,y);      break;
+        case '4': drawChar16(four,x,y);       break;
+        case '5': drawChar16(five,x,y);       break;
+        case '6': drawChar16(six,x,y);        break;
+        case '7': drawChar16(seven,x,y);      break;
+        case '8': drawChar16(eight,x,y);      break;
+        case '9': drawChar16(nine,x,y);       break;
+        case 'a': case 'A': drawChar16(A,x,y);  break;    
+        case 'b': case 'B': drawChar16(B,x,y);  break;    
+        case 'c': case 'C': drawChar16(C,x,y);  break;    
+        case 'd': case 'D': drawChar16(D,x,y);  break;    
+        case 'e': case 'E': drawChar16(E,x,y);  break;    
+        case 'f': case 'F': drawChar16(F,x,y);  break;    
+        case 'g': case 'G': drawChar16(G,x,y);  break;    
+        case 'h': case 'H': drawChar16(H,x,y);  break;    
+        case 'i': case 'I': drawChar16(I,x,y);  break;    
+        case 'j': case 'J': drawChar16(J,x,y);  break;    
+        case 'k': case 'K': drawChar16(K,x,y);  break;    
+        case 'l': case 'L': drawChar16(L,x,y);  break;    
+        case 'm': case 'M': drawChar16(M,x,y);  break;    
+        case 'n': case 'N': drawChar16(N,x,y);  break;    
+        case 'o': case 'O': drawChar16(O,x,y);  break;    
+        case 'p': case 'P': drawChar16(P,x,y);  break;    
+        case 'q': case 'Q': drawChar16(Q,x,y);  break;    
+        case 'r': case 'R': drawChar16(R,x,y);  break;    
+        case 's': case 'S': drawChar16(S,x,y);  break;    
+        case 't': case 'T': drawChar16(T,x,y);  break;    
+        case 'u': case 'U': drawChar16(U,x,y);  break;    
+        case 'v': case 'V': drawChar16(V,x,y);  break;    
+        case 'w': case 'W': drawChar16(W,x,y);  break;    
+        case 'x': case 'X': drawChar16(X,x,y);  break;    
+        case 'y': case 'Y': drawChar16(Y,x,y);  break;    
+        case 'z': case 'Z': drawChar16(Z,x,y);  break;      
+        default: break;
+    }
 }
 
-void drawString(char s[], int l)
+void drawNumber(int n, int x, int y)
+{
+	char digit[3];
+	sprintf(digit,"%i",n);
+    drawCharFromString(digit[0],x,y);
+    drawCharFromString(digit[1],x+12,y);
+    drawCharFromString(digit[2],x+24,y);
+}
+
+void drawString(char s[], int x, int y)
 {
     int i;
-    int x = 0;
-    int y = 0;
+    int l = strlen(s);
+    if(l > 10)
+        l = 10;
     for(i = 0; i < l; i++)
     {
         drawCharFromString(s[i],x,y);
@@ -534,24 +562,23 @@ void drawString(char s[], int l)
             |
             |   MSB
 */
-void jsonStructInit()
+void displayStruct()
 {
-    myJsonStruct.name[0] = '\0';
-    myJsonStruct.age = 0;
-    myJsonStruct.admin = false;
+    //drawString(myJsonStruct.name, 10);
 }
 
 void fillStruct(char n[256], int a, bool admin)
 {
     // take semaphore xSemaphore and will wait indefinitely
     // for the semaphore to become available
-    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    //xSemaphoreTake(xSemaphore,portMAX_DELAY);
     
     strncpy(myJsonStruct.name, n, 256);
     myJsonStruct.name[255] = '\0';
     myJsonStruct.age = a;
     myJsonStruct.admin = admin;
-    xSemaphoreGive(xSemaphore);
+    //xSemaphoreGive(xSemaphore);
+    displayStruct();
 }
 
 void parseJSON(char *js)
@@ -572,15 +599,15 @@ void parseJSON(char *js)
     fillStruct( json_object_get_string(data, "name"), 
                 json_object_get_number(data, "age"), 
                 json_object_get_boolean(data, "admin"));
+    clearDisplay();
+    drawString(myJsonStruct.name,0,1);
+    drawNumber(myJsonStruct.age,0,3);
+    display();
 }
 
 void parseJSONTask(void *arg)
 {
-    while(1)
-    {
-        parseJSON((char *)arg); 
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
-    }
+    parseJSON((char *)arg); 
     vTaskDelete(NULL);
 }
 
@@ -589,7 +616,6 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
     // get the client associated with the event
     esp_mqtt_client_handle_t client = event->client;
-    //char *jsonString = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
     int msg_id;
     char message[256];
     // your_context_t *context = event->context;
@@ -638,7 +664,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             printf("%s\n",message);
             strncpy(jsonString, event->data, event->data_len);
             jsonString[event->data_len] = '\0';
-            parseJSON(jsonString);
+            xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)jsonString, 5, NULL);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -739,12 +765,6 @@ void emptyTask(void *arg)
 
     while(1)
     {
-        xSemaphoreTake(xSemaphore,portMAX_DELAY);
-        printf("%s\t%i\t%d\n",
-            myJsonStruct.name,
-            myJsonStruct.age,
-            myJsonStruct.admin);
-        xSemaphoreGive(xSemaphore);
         vTaskDelay( 2000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
@@ -769,15 +789,12 @@ void app_main() // vTaskStartScheduler is created here
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
-    jsonStructInit();
 
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
+    clearDisplay();
     display();
 
-    //xTaskCreate(&emptyTask, "emptyTask", 4096, NULL, 5, NULL);
-    //xTaskCreate(&i2c_test_task, "i2c_test_task_0", 8192, NULL, 5, NULL);
-    //xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)jsonString, 5, NULL);
     while(1)
     {
         vTaskDelay(500 / portTICK_PERIOD_MS);
