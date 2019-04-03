@@ -251,6 +251,24 @@ void clearDisplay()
     memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
 }
 
+void fillDisplay()
+{
+    memset(buffer, 0xFF, WIDTH * ((HEIGHT + 7) / 8));
+}
+
+// param y in pages
+void clearBox(int x1, int y1, int x2, int y2)
+{
+    int i,j;
+    for(i = y1; i < y2; i++)
+    {
+        for(j = x1; j < x2; j++)
+        {
+            buffer[j + (i * 128)] = 0;
+        }
+    }
+}
+
 void begin(uint8_t vcs, uint8_t addr) 
 {
 
@@ -786,14 +804,15 @@ void app_main() // vTaskStartScheduler is created here
     esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
     esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
 
-    nvs_flash_init();
-    wifi_init();
-    mqtt_app_start();
-
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
     display();
+
+    nvs_flash_init();
+    wifi_init();
+    mqtt_app_start();
+
 
     while(1)
     {
