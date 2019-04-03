@@ -144,6 +144,10 @@ static struct jsonStruct
     #define eight eight16
     #define nine nine16
     #define blank blank16
+    #define percent percent16
+    #define wifi wifi16
+    #define degree degree16 
+    #define ohm ohm16
 #endif
 
 uint8_t *buffer;
@@ -251,11 +255,14 @@ void clearDisplay()
     memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
 }
 
+// fills the display with white
 void fillDisplay()
 {
+    // sets the entire buffer to 0xFF
     memset(buffer, 0xFF, WIDTH * ((HEIGHT + 7) / 8));
 }
 
+// clears a rectangle of the screen to black
 // param y in pages
 void clearBox(int x1, int y1, int x2, int y2)
 {
@@ -271,11 +278,7 @@ void clearBox(int x1, int y1, int x2, int y2)
 
 void begin(uint8_t vcs, uint8_t addr) 
 {
-
-	//if((!buffer) && !(buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8))))
-    	//return false;
-
-    //buffer = (uint8_t*) malloc(WIDTH * ((HEIGHT + 7) / 8));
+    // allocate memory to buffer
     buffer = (uint8_t*) pvPortMalloc(WIDTH * ((HEIGHT + 7) / 8));
 
 	clearDisplay();
@@ -327,23 +330,26 @@ void display()
 	command(SSD1306_COLUMNADDR);
 	command(0);
 	command(WIDTH - 1);
-
-
 	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
-
 	uint8_t *ptr   = buffer;
-
+    // create i2c link
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    // begin tx
     i2c_master_start(cmd);
+    // configure display to receive data
     i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
     i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
     uint8_t bytesOut = 1;
     while(count--)
     {
+        // if outgoing buffer is full
     	if(bytesOut >= WIRE_MAX)
     	{
+            // stop bit
     		i2c_master_stop(cmd);
+            // begin the tx
     		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+            // delete link
             i2c_cmd_link_delete(cmd);
     		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
             i2c_master_start(cmd);
@@ -351,9 +357,11 @@ void display()
     		i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
     		bytesOut = 1;
     	}
+        // write bytes from buffer to outgoing buffer
     	i2c_master_write_byte(cmd, *ptr++, ACK_CHECK_EN);
         bytesOut++;
     }
+    // finish tx
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
@@ -703,6 +711,8 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
             break;
         case SYSTEM_EVENT_STA_GOT_IP:
             xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+            drawChar16(wifi,118,0);
+            display();
 
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
@@ -807,6 +817,9 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
+    drawChar16(ohm,0,0);
+
+
     display();
 
     nvs_flash_init();
