@@ -582,7 +582,7 @@ void drawString(char s[], int x, int y)
 */
 void displayStruct()
 {
-    //drawString(myJsonStruct.name, 10);
+    drawString(myJsonStruct.name, 0, 0);
 }
 
 void fillStruct(char n[256], int a, bool admin)
@@ -617,9 +617,9 @@ void parseJSON(char *js)
     fillStruct( json_object_get_string(data, "name"), 
                 json_object_get_number(data, "age"), 
                 json_object_get_boolean(data, "admin"));
-    clearDisplay();
-    drawString(myJsonStruct.name,0,1);
-    drawNumber(myJsonStruct.age,0,3);
+    
+    drawString(json_object_get_string(data, "name"),0,0);
+    
     display();
 }
 
