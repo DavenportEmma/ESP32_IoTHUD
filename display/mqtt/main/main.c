@@ -1,14 +1,43 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stddef.h>
 #include <string.h>
+#include "esp_wifi.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include "esp_event_loop.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
+#include "freertos/event_groups.h"
 #include "esp_log.h"
+#include "lwip/sockets.h"
+#include "lwip/dns.h"
+#include "lwip/netdb.h"
 #include "driver/i2c.h"
 #include "ascii.h"
 #include "font16px.h"
 #include "sdkconfig.h"
+#include "mqtt_client.h"
+#include "../parson/parson.h"
+#include "../parson/parson.c"
 
-static const char *TAG = "i2c-example";
+static const char *TAG = "MQTTWS_I2C_DISPLAY";
+
+static EventGroupHandle_t wifi_event_group;
+static SemaphoreHandle_t xSemaphore = NULL;
+static int CONNECTED_BIT = BIT0;
+
+char jsonString[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+
+static struct jsonStruct
+{
+    char name[256];
+    int age;
+    bool admin;
+} myJsonStruct;
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -75,6 +104,7 @@ static const char *TAG = "i2c-example";
 #define SSD1306_ACTIVATE_SCROLL                      0x2F ///< Start scroll
 #define SSD1306_SET_VERTICAL_SCROLL_AREA             0xA3 ///< Set scroll range
 
+// 16px font definitions to clean up functions
 #define TEXT 16
 #if TEXT == 16
     #define A A16
@@ -214,17 +244,39 @@ void command(uint8_t c)
     return ret;
 }
 
+// clears the display
 void clearDisplay()
 {
+    // sets the entire buffer to 0
     memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
+}
+
+void fillDisplay()
+{
+    memset(buffer, 0xFF, WIDTH * ((HEIGHT + 7) / 8));
+}
+
+// param y in pages
+void clearBox(int x1, int y1, int x2, int y2)
+{
+    int i,j;
+    for(i = y1; i < y2; i++)
+    {
+        for(j = x1; j < x2; j++)
+        {
+            buffer[j + (i * 128)] = 0;
+        }
+    }
 }
 
 void begin(uint8_t vcs, uint8_t addr) 
 {
+
 	//if((!buffer) && !(buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8))))
     	//return false;
 
-    buffer = (uint8_t*) malloc(WIDTH * ((HEIGHT + 7) / 8));
+    //buffer = (uint8_t*) malloc(WIDTH * ((HEIGHT + 7) / 8));
+    buffer = (uint8_t*) pvPortMalloc(WIDTH * ((HEIGHT + 7) / 8));
 
 	clearDisplay();
 	vccstate = vcs;
@@ -265,6 +317,48 @@ void begin(uint8_t vcs, uint8_t addr)
   	command(SSD1306_DISPLAYON);				// / Main screen turn on
 }
 
+// sends the buffer contents to the display
+void display() 
+{
+    // initialises the display RAM
+	command(SSD1306_PAGEADDR);
+	command(0);
+	command(0xFF);
+	command(SSD1306_COLUMNADDR);
+	command(0);
+	command(WIDTH - 1);
+
+
+	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
+
+	uint8_t *ptr   = buffer;
+
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
+    uint8_t bytesOut = 1;
+    while(count--)
+    {
+    	if(bytesOut >= WIRE_MAX)
+    	{
+    		i2c_master_stop(cmd);
+    		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+            i2c_cmd_link_delete(cmd);
+    		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+            i2c_master_start(cmd);
+    		i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    		i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
+    		bytesOut = 1;
+    	}
+    	i2c_master_write_byte(cmd, *ptr++, ACK_CHECK_EN);
+        bytesOut++;
+    }
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+}
+
 void drawPixel(int16_t x, int16_t y, uint16_t colour)
 {
 	if((x >= 0) && (x < WIDTH && (y >= 0) && (y < HEIGHT))) 
@@ -290,7 +384,7 @@ void drawPixel(int16_t x, int16_t y, uint16_t colour)
 	    	case WHITE:   buffer[x + (y/8)*WIDTH] |=  (1 << (y&7)); break;
 	    	case BLACK:   buffer[x + (y/8)*WIDTH] &= ~(1 << (y&7)); break;
 	    	case INVERSE: buffer[x + (y/8)*WIDTH] ^=  (1 << (y&7)); break;
-    	}
+        }
 	}
 }
 
@@ -370,7 +464,9 @@ void VLine(int16_t x, int16_t y, int16_t h, uint16_t colour)
 
 }
 
-void drawChar(int c, int16_t x, int16_t y)
+// draw a character from the ascii.h file
+// characters in this file are 5x8b
+void drawChar8(int c, int16_t x, int16_t y)
 {
     int i;
 
@@ -380,6 +476,7 @@ void drawChar(int c, int16_t x, int16_t y)
     }
 }
 
+// draw a character from the font16px.h file
 void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
 {
     int i = 0;
@@ -392,6 +489,74 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
         }
     }
 }
+
+void drawCharFromString(char c, int x, int y)
+{
+    switch(c)
+    {
+        case '0': drawChar16(zero,x,y);       break;
+        case '1': drawChar16(one,x,y);        break;
+        case '2': drawChar16(two,x,y);        break;
+        case '3': drawChar16(three,x,y);      break;
+        case '4': drawChar16(four,x,y);       break;
+        case '5': drawChar16(five,x,y);       break;
+        case '6': drawChar16(six,x,y);        break;
+        case '7': drawChar16(seven,x,y);      break;
+        case '8': drawChar16(eight,x,y);      break;
+        case '9': drawChar16(nine,x,y);       break;
+        case 'a': case 'A': drawChar16(A,x,y);  break;    
+        case 'b': case 'B': drawChar16(B,x,y);  break;    
+        case 'c': case 'C': drawChar16(C,x,y);  break;    
+        case 'd': case 'D': drawChar16(D,x,y);  break;    
+        case 'e': case 'E': drawChar16(E,x,y);  break;    
+        case 'f': case 'F': drawChar16(F,x,y);  break;    
+        case 'g': case 'G': drawChar16(G,x,y);  break;    
+        case 'h': case 'H': drawChar16(H,x,y);  break;    
+        case 'i': case 'I': drawChar16(I,x,y);  break;    
+        case 'j': case 'J': drawChar16(J,x,y);  break;    
+        case 'k': case 'K': drawChar16(K,x,y);  break;    
+        case 'l': case 'L': drawChar16(L,x,y);  break;    
+        case 'm': case 'M': drawChar16(M,x,y);  break;    
+        case 'n': case 'N': drawChar16(N,x,y);  break;    
+        case 'o': case 'O': drawChar16(O,x,y);  break;    
+        case 'p': case 'P': drawChar16(P,x,y);  break;    
+        case 'q': case 'Q': drawChar16(Q,x,y);  break;    
+        case 'r': case 'R': drawChar16(R,x,y);  break;    
+        case 's': case 'S': drawChar16(S,x,y);  break;    
+        case 't': case 'T': drawChar16(T,x,y);  break;    
+        case 'u': case 'U': drawChar16(U,x,y);  break;    
+        case 'v': case 'V': drawChar16(V,x,y);  break;    
+        case 'w': case 'W': drawChar16(W,x,y);  break;    
+        case 'x': case 'X': drawChar16(X,x,y);  break;    
+        case 'y': case 'Y': drawChar16(Y,x,y);  break;    
+        case 'z': case 'Z': drawChar16(Z,x,y);  break;      
+        default: break;
+    }
+}
+
+void drawNumber(int n, int x, int y)
+{
+	char digit[3];
+	sprintf(digit,"%i",n);
+    drawCharFromString(digit[0],x,y);
+    drawCharFromString(digit[1],x+12,y);
+    drawCharFromString(digit[2],x+24,y);
+}
+
+void drawString(char s[], int x, int y)
+{
+    int i;
+    int l = strlen(s);
+    if(l > 10)
+        l = 10;
+    for(i = 0; i < l; i++)
+    {
+        drawCharFromString(s[i],x,y);
+        x = x + 12;
+    }
+    display();
+}
+
 /*
     PAGE|COL 0 |COL 1 | ...  |COL 126|COL 127|
     0   |      |      | ...  |       |       |
@@ -415,114 +580,242 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
             |
             |   MSB
 */
-
-void display() 
+void displayStruct()
 {
-	command(SSD1306_PAGEADDR);
-	command(0);
-	command(0xFF);
-	command(SSD1306_COLUMNADDR);
-	command(0);
-	command(WIDTH - 1);
-
-
-	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
-	uint8_t *ptr   = buffer;
-
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
-    uint8_t bytesOut = 1;
-    while(count--)
-    {
-    	if(bytesOut >= WIRE_MAX)
-    	{
-    		i2c_master_stop(cmd);
-    		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
-    		i2c_cmd_link_delete(cmd);
-
-    		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    		i2c_master_start(cmd);
-    		i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
-    		i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
-    		uint8_t bytesOut = 1;
-    	}
-    	i2c_master_write_byte(cmd, *ptr++, ACK_CHECK_EN);
-    	bytesOut++;
-    }
-    i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
+    //drawString(myJsonStruct.name, 10);
 }
 
-static void i2c_test_task(void *arg)
+void fillStruct(char n[256], int a, bool admin)
 {
-    int i = 0;
+    // take semaphore xSemaphore and will wait indefinitely
+    // for the semaphore to become available
+    //xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    
+    strncpy(myJsonStruct.name, n, 256);
+    myJsonStruct.name[255] = '\0';
+    myJsonStruct.age = a;
+    myJsonStruct.admin = admin;
+    //xSemaphoreGive(xSemaphore);
+    displayStruct();
+}
+
+void parseJSON(char *js)
+{
+    printf("%s\n",js);
+    JSON_Value *root_value;
+    JSON_Object *data;
+    root_value = json_parse_string(js);
+	data = json_value_get_object(root_value);
+    if(data == NULL)
+    {
+        return;
+    }
+	printf("%s\n",json_object_get_string(data, "name"));
+	printf("%f\n",json_object_get_number(data, "age"));
+	printf("%d\n",json_object_get_boolean(data, "admin"));
+
+    fillStruct( json_object_get_string(data, "name"), 
+                json_object_get_number(data, "age"), 
+                json_object_get_boolean(data, "admin"));
+    clearDisplay();
+    drawString(myJsonStruct.name,0,1);
+    drawNumber(myJsonStruct.age,0,3);
+    display();
+}
+
+void parseJSONTask(void *arg)
+{
+    parseJSON((char *)arg); 
+    vTaskDelete(NULL);
+}
+
+// this function deals with mqtt events
+static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
+{
+    // get the client associated with the event
+    esp_mqtt_client_handle_t client = event->client;
+    int msg_id;
+    char message[256];
+    // your_context_t *context = event->context;
+    switch (event->event_id) {
+        case MQTT_EVENT_CONNECTED:
+            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+            msg_id = esp_mqtt_client_subscribe(client, "/topic/conor0", 0);
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+            msg_id = esp_mqtt_client_subscribe(client, "/topic/conor1", 1);
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+            msg_id = esp_mqtt_client_unsubscribe(client, "/topic/conor1");
+            ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+            break;
+        case MQTT_EVENT_DISCONNECTED:
+            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+            break;
+
+        case MQTT_EVENT_SUBSCRIBED:
+            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+            //msg_id = esp_mqtt_client_publish(client, "/topic/conor0", "data", 0, 0, 0);
+            //ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+            break;
+        case MQTT_EVENT_UNSUBSCRIBED:
+            ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+            break;
+        case MQTT_EVENT_PUBLISHED:
+            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            break;
+        case MQTT_EVENT_DATA:
+        // data event
+        /*  msg_id                  message id
+            topic                   pointer to the received topic
+            topic_len               length of the topic
+            data                    pointer to the received data
+            data_len                length of the data for this event
+            current_data_offset     offset of the current data for this event
+            total_data_len  total   length of the data received
+        */
+            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            printf("DATA=%.*s\r\n", event->data_len, event->data);
+            strncpy(message, event->data, event->data_len);
+            message[event->data_len] = '\0';
+            printf("%s\n",message);
+            strncpy(jsonString, event->data, event->data_len);
+            jsonString[event->data_len] = '\0';
+            xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)jsonString, 5, NULL);
+            break;
+        case MQTT_EVENT_ERROR:
+            ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
+            break;
+        default:
+            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+            break;
+    }
+    
+    return ESP_OK;
+}
+
+static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
+{
+    switch (event->event_id) {
+        case SYSTEM_EVENT_STA_START:
+            esp_wifi_connect();
+            break;
+        case SYSTEM_EVENT_STA_GOT_IP:
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+
+            break;
+        case SYSTEM_EVENT_STA_DISCONNECTED:
+            esp_wifi_connect();
+            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+            break;
+        default:
+            break;
+    }
+    return ESP_OK;
+}
+
+static void wifi_init(void)
+{
+    // initialises the underlying TCP/IP stack
+    tcpip_adapter_init();
+    wifi_event_group = xEventGroupCreate();
+    // creates system event task and initialises event callback
+    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // initialise wifi resources for wifi driver;
+    // control structure, buffers
+    // start wifi task
+    // use default wifi configuration
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    // set wifi api configuration storage type
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = "VM0196906",
+            .password = "8w2knZfjpdyb",
+            //.ssid = "Conor's phone",
+            //.password = "password12345",
+        },
+    };
+    // set operating mode set to station
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    // set configuration of the STA
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_LOGI(TAG, "start the WIFI SSID:[%s]", "VM0196906");
+    // start wifi according to current config mode
+    // if STA it creates a station control block and starts the station
+    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_LOGI(TAG, "Waiting for wifi");
+    /*  xEventGroupWaitBits(event_group, 
+                            bits_to_wait_for,
+                            clear_on_exit,
+                            wait_for_all_bits,
+                            ticks_to_wait)
+        this will wait for the connected bit in the wifi event group
+        to be asserted. It will not be cleared when the function returns*/
+    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+}
+
+static void mqtt_app_start(void)
+{
+    // set configuration for mqtt
+    const esp_mqtt_client_config_t mqtt_cfg = {
+        .uri = "mqtt://broker.mqttdashboard.com",
+        // mqtt event handler
+        .event_handle = mqtt_event_handler,
+        // .user_context = (void *)your_context
+    };
+
+    #if CONFIG_BROKER_URL_FROM_STDIN
+    char line[128];
+
+#endif /* CONFIG_BROKER_URL_FROM_STDIN */
+    // initialise mqtt client with set config
+    // returns client handle
+    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    // start mqtt client
+    esp_mqtt_client_start(client);
+}
+
+void emptyTask(void *arg)
+{
+
     while(1)
     {
-        switch(i)
-        {
-            case 0:
-                drawChar16(zero16,0,0);
-                break;
-
-            case 1:
-                drawChar16(one16,0,0);
-                break;
-
-            case 2:
-                drawChar16(two16,0,0);
-                break;
-
-            case 3:
-                drawChar16(three16,0,0);
-                break;
-
-            case 4:
-                drawChar16(four16,0,0);
-                break;
-
-            case 5:
-                drawChar16(five16,0,0);
-                break;
-
-            case 6:
-                drawChar16(six16,0,0);
-                break;
-
-            case 7:
-                drawChar16(seven16,0,0);
-                break;
-
-            case 8:
-                drawChar16(eight16,0,0);
-                break;
-
-            case 9:
-                drawChar16(nine16,0,0);
-                i = -1;
-                break;
-        }
-        display();
-        i++;
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay( 2000 / portTICK_PERIOD_MS);
     }
+    vTaskDelete(NULL);
 }
 
-void app_main()
+void app_main() // vTaskStartScheduler is created here
 {
+    // create binary semaphore, returns handle
+    xSemaphore = xSemaphoreCreateBinary();
+    ESP_LOGI(TAG, "[APP] Startup..");
+    ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
+    ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
+
+    esp_log_level_set("*", ESP_LOG_INFO);
+    esp_log_level_set("MQTT_CLIENT", ESP_LOG_VERBOSE);
+    esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
+    esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
+    esp_log_level_set("TRANSPORT_WS", ESP_LOG_VERBOSE);
+    esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
+    esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
+
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
-    display();
     clearDisplay();
-    HLine(0,18,13,WHITE);
-    VLine(12,0,19,WHITE);
-    drawChar16(H,0,3);
-    drawChar16(E,11,3);
-    drawChar16(L,22,3);
-    drawChar16(L,33,3);
-    drawChar16(O,44,3);
     display();
-    xTaskCreate(i2c_test_task, "i2c_test_task_0", 1024 * 2, (void *)0, 10, NULL);
+
+    nvs_flash_init();
+    wifi_init();
+    mqtt_app_start();
+
+
+    while(1)
+    {
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
 }
