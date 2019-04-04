@@ -588,23 +588,35 @@ void drawString(char s[], int x, int y)
             |
             |   MSB
 */
-void displayStruct()
+void myJsonStruct_init()
 {
-    drawString(myJsonStruct.name, 0, 0);
+    myJsonStruct.name[0] = '\0';
+    myJsonStruct.age = 0;
+    myJsonStruct.admin = false;
+}
+
+void displayJSONTask(void *arg)
+{
+    while(1)
+    {
+        //xSemaphoreTake(xSemaphore,0);
+        clearBox(0,1,127,5);
+        drawString(myJsonStruct.name,0,1);
+        drawNumber(myJsonStruct.age,0,3);
+        drawNumber(myJsonStruct.admin,0,5);
+        //xSemaphoreGive(xSemaphore);
+        display();
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
 }
 
 void fillStruct(char n[256], int a, bool admin)
-{
-    // take semaphore xSemaphore and will wait indefinitely
-    // for the semaphore to become available
-    //xSemaphoreTake(xSemaphore,portMAX_DELAY);
-    
+{    
     strncpy(myJsonStruct.name, n, 256);
     myJsonStruct.name[255] = '\0';
     myJsonStruct.age = a;
     myJsonStruct.admin = admin;
-    //xSemaphoreGive(xSemaphore);
-    displayStruct();
 }
 
 void parseJSON(char *js)
@@ -622,13 +634,11 @@ void parseJSON(char *js)
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
 
+    xSemaphoreTake(xSemaphore,0);   // block time of 0 polls mutex
     fillStruct( json_object_get_string(data, "name"), 
                 json_object_get_number(data, "age"), 
                 json_object_get_boolean(data, "admin"));
-    
-    drawString(json_object_get_string(data, "name"),0,0);
-    
-    display();
+    xSemaphoreGive(xSemaphore);
 }
 
 void parseJSONTask(void *arg)
@@ -788,7 +798,7 @@ static void mqtt_app_start(void)
     esp_mqtt_client_start(client);
 }
 
-void emptyTask(void *arg)
+/*void emptyTask(void *arg)
 {
 
     while(1)
@@ -796,12 +806,12 @@ void emptyTask(void *arg)
         vTaskDelay( 2000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
-}
+}*/
 
 void app_main() // vTaskStartScheduler is created here
 {
-    // create binary semaphore, returns handle
-    xSemaphore = xSemaphoreCreateBinary();
+    // create mutex, returns handle
+    xSemaphore = xSemaphoreCreateMutex();
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
@@ -817,15 +827,13 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
-    drawChar16(ohm,0,0);
-
-
     display();
 
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
-
+    myJsonStruct_init();
+    xTaskCreate(&displayJSONTask, "display JSON task", (1024 * 4), NULL, 5, NULL);
 
     while(1)
     {
