@@ -284,9 +284,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
 139 .literal.drawString 0000000c  00000000  00000000  00000ce0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-140 .literal.displayJSONTask 0000001c  00000000  00000000  00000cec  2**2
+140 .literal.myJsonStruct_init 00000004  00000000  00000000  00000cec  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-141 .literal.myJsonStruct_init 00000004  00000000  00000000  00000d08  2**2
+141 .literal.displayJSONTask 0000001c  00000000  00000000  00000cf0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
 142 .literal.fillStruct 00000008  00000000  00000000  00000d0c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
@@ -294,473 +294,473 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
 144 .literal.parseJSONTask 00000008  00000000  00000000  00000d6c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-145 .literal.app_main 000000b8  00000000  00000000  00000d74  2**2
+145 .literal.app_main 000000ac  00000000  00000000  00000d74  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-146 .text         00000000  00000000  00000000  00000e2c  2**0
+146 .text         00000000  00000000  00000000  00000e20  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-147 .data         00000000  00000000  00000000  00000e2c  2**0
+147 .data         00000000  00000000  00000000  00000e20  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-148 .bss          00000000  00000000  00000000  00000e2c  2**0
+148 .bss          00000000  00000000  00000000  00000e20  2**0
                   ALLOC
-149 .text.hex_char_to_int 00000036  00000000  00000000  00000e2c  2**2
+149 .text.hex_char_to_int 00000036  00000000  00000000  00000e20  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-150 .text.parse_utf16_hex 000000a0  00000000  00000000  00000e64  2**2
+150 .text.parse_utf16_hex 000000a0  00000000  00000000  00000e58  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-151 .text.num_bytes_in_utf8_sequence 00000071  00000000  00000000  00000f04  2**2
+151 .text.num_bytes_in_utf8_sequence 00000071  00000000  00000000  00000ef8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-152 .text.verify_utf8_sequence 0000010c  00000000  00000000  00000f78  2**2
+152 .text.verify_utf8_sequence 0000010c  00000000  00000000  00000f6c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-153 .text.is_valid_utf8 00000025  00000000  00000000  00001084  2**2
+153 .text.is_valid_utf8 00000025  00000000  00000000  00001078  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-154 .text.json_object_init 00000024  00000000  00000000  000010ac  2**2
+154 .text.json_object_init 00000024  00000000  00000000  000010a0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-155 .text.json_array_init 00000021  00000000  00000000  000010d0  2**2
+155 .text.json_array_init 00000021  00000000  00000000  000010c4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-156 .text.json_value_init_string_no_copy 00000021  00000000  00000000  000010f4  2**2
+156 .text.json_value_init_string_no_copy 00000021  00000000  00000000  000010e8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-157 .text.skip_quotes 00000048  00000000  00000000  00001118  2**2
+157 .text.skip_quotes 00000048  00000000  00000000  0000110c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-158 .text.parse_utf16 00000124  00000000  00000000  00001160  2**2
+158 .text.parse_utf16 00000124  00000000  00000000  00001154  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-159 .rodata.str1.4 00000676  00000000  00000000  00001284  2**2
+159 .rodata.str1.4 00000662  00000000  00000000  00001278  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-160 .text.read_file 0000009c  00000000  00000000  000018fc  2**2
+160 .text.read_file 0000009c  00000000  00000000  000018dc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-161 .text.process_string 00000112  00000000  00000000  00001998  2**2
+161 .text.process_string 00000112  00000000  00000000  00001978  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-162 .rodata.process_string 00000150  00000000  00000000  00001aac  2**2
+162 .rodata.process_string 00000150  00000000  00000000  00001a8c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-163 .text.get_quoted_string 00000028  00000000  00000000  00001bfc  2**2
+163 .text.get_quoted_string 00000028  00000000  00000000  00001bdc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-164 .text.parse_string_value 0000002e  00000000  00000000  00001c24  2**2
+164 .text.parse_string_value 0000002e  00000000  00000000  00001c04  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-165 .text.json_object_resize 00000098  00000000  00000000  00001c54  2**2
+165 .text.json_object_resize 00000098  00000000  00000000  00001c34  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-166 .text.json_array_resize 00000040  00000000  00000000  00001cec  2**2
+166 .text.json_array_resize 00000040  00000000  00000000  00001ccc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-167 .text.parson_strndup 0000002a  00000000  00000000  00001d2c  2**2
+167 .text.parson_strndup 0000002a  00000000  00000000  00001d0c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-168 .text.parson_strdup 0000001a  00000000  00000000  00001d58  2**2
+168 .text.parson_strdup 0000001a  00000000  00000000  00001d38  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-169 .text.is_decimal 0000005e  00000000  00000000  00001d74  2**2
+169 .text.is_decimal 0000005e  00000000  00000000  00001d54  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-170 .text.remove_comments 000000c2  00000000  00000000  00001dd4  2**2
+170 .text.remove_comments 000000c2  00000000  00000000  00001db4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-171 .text.append_string 00000022  00000000  00000000  00001e98  2**2
+171 .text.append_string 00000022  00000000  00000000  00001e78  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-172 .text.append_indent 00000030  00000000  00000000  00001ebc  2**2
+172 .text.append_indent 00000030  00000000  00000000  00001e9c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-173 .text.json_serialize_string 00000464  00000000  00000000  00001eec  2**2
+173 .text.json_serialize_string 00000464  00000000  00000000  00001ecc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-174 .rodata.json_serialize_string 00000174  00000000  00000000  00002350  2**2
+174 .rodata.json_serialize_string 00000174  00000000  00000000  00002330  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-175 .rodata       00000060  00000000  00000000  000024c4  2**2
+175 .rodata       00000060  00000000  00000000  000024a4  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-176 .text.wifi_init 000001ab  00000000  00000000  00002524  2**2
+176 .text.wifi_init 000001ab  00000000  00000000  00002504  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-177 .text.mqtt_app_start 0000002c  00000000  00000000  000026d0  2**2
+177 .text.mqtt_app_start 0000002c  00000000  00000000  000026b0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-178 .text.mqtt_event_handler 000001f2  00000000  00000000  000026fc  2**2
+178 .text.mqtt_event_handler 000001f2  00000000  00000000  000026dc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-179 .rodata.mqtt_event_handler 0000001c  00000000  00000000  000028f0  2**2
+179 .rodata.mqtt_event_handler 0000001c  00000000  00000000  000028d0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-180 .text.json_object_get_count 0000000d  00000000  00000000  0000290c  2**2
+180 .text.json_object_get_count 0000000d  00000000  00000000  000028ec  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-181 .text.json_object_getn_value 00000043  00000000  00000000  0000291c  2**2
+181 .text.json_object_getn_value 00000043  00000000  00000000  000028fc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-182 .text.json_object_get_value 00000031  00000000  00000000  00002960  2**2
+182 .text.json_object_get_value 00000031  00000000  00000000  00002940  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-183 .text.json_object_get_name 00000021  00000000  00000000  00002994  2**2
+183 .text.json_object_get_name 00000021  00000000  00000000  00002974  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-184 .text.json_object_get_value_at 00000021  00000000  00000000  000029b8  2**2
+184 .text.json_object_get_value_at 00000021  00000000  00000000  00002998  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-185 .text.json_object_get_wrapping_value 00000007  00000000  00000000  000029dc  2**2
+185 .text.json_object_get_wrapping_value 00000007  00000000  00000000  000029bc  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-186 .text.json_object_addn 00000094  00000000  00000000  000029e4  2**2
+186 .text.json_object_addn 00000094  00000000  00000000  000029c4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-187 .text.json_object_add 00000024  00000000  00000000  00002a78  2**2
+187 .text.json_object_add 00000024  00000000  00000000  00002a58  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-188 .text.json_object_has_value 00000016  00000000  00000000  00002a9c  2**2
+188 .text.json_object_has_value 00000016  00000000  00000000  00002a7c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-189 .text.json_array_get_count 0000000d  00000000  00000000  00002ab4  2**2
+189 .text.json_array_get_count 0000000d  00000000  00000000  00002a94  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-190 .text.json_array_get_value 00000021  00000000  00000000  00002ac4  2**2
+190 .text.json_array_get_value 00000021  00000000  00000000  00002aa4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-191 .text.json_array_get_wrapping_value 00000007  00000000  00000000  00002ae8  2**2
+191 .text.json_array_get_wrapping_value 00000007  00000000  00000000  00002ac8  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-192 .text.json_array_add 00000040  00000000  00000000  00002af0  2**2
+192 .text.json_array_add 00000040  00000000  00000000  00002ad0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-193 .text.json_value_get_type 0000000d  00000000  00000000  00002b30  2**2
+193 .text.json_value_get_type 0000000d  00000000  00000000  00002b10  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-194 .text.json_object_has_value_of_type 00000024  00000000  00000000  00002b40  2**2
+194 .text.json_object_has_value_of_type 00000024  00000000  00000000  00002b20  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-195 .text.json_value_get_object 00000018  00000000  00000000  00002b64  2**2
+195 .text.json_value_get_object 00000018  00000000  00000000  00002b44  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-196 .text.json_object_get_object 00000017  00000000  00000000  00002b7c  2**2
+196 .text.json_object_get_object 00000017  00000000  00000000  00002b5c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-197 .text.json_object_dotget_value 0000003c  00000000  00000000  00002b94  2**2
+197 .text.json_object_dotget_value 0000003c  00000000  00000000  00002b74  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-198 .text.json_object_dothas_value 00000016  00000000  00000000  00002bd0  2**2
+198 .text.json_object_dothas_value 00000016  00000000  00000000  00002bb0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-199 .text.json_object_dothas_value_of_type 00000024  00000000  00000000  00002be8  2**2
+199 .text.json_object_dothas_value_of_type 00000024  00000000  00000000  00002bc8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-200 .text.json_object_dotget_object 00000017  00000000  00000000  00002c0c  2**2
+200 .text.json_object_dotget_object 00000017  00000000  00000000  00002bec  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-201 .text.json_array_get_object 00000017  00000000  00000000  00002c24  2**2
+201 .text.json_array_get_object 00000017  00000000  00000000  00002c04  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-202 .text.json_value_get_array 00000018  00000000  00000000  00002c3c  2**2
+202 .text.json_value_get_array 00000018  00000000  00000000  00002c1c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-203 .text.json_object_get_array 00000017  00000000  00000000  00002c54  2**2
+203 .text.json_object_get_array 00000017  00000000  00000000  00002c34  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-204 .text.json_object_dotget_array 00000017  00000000  00000000  00002c6c  2**2
+204 .text.json_object_dotget_array 00000017  00000000  00000000  00002c4c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-205 .text.json_array_get_array 00000017  00000000  00000000  00002c84  2**2
+205 .text.json_array_get_array 00000017  00000000  00000000  00002c64  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-206 .text.json_value_get_string 00000018  00000000  00000000  00002c9c  2**2
+206 .text.json_value_get_string 00000018  00000000  00000000  00002c7c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-207 .text.json_object_get_string 00000017  00000000  00000000  00002cb4  2**2
+207 .text.json_object_get_string 00000017  00000000  00000000  00002c94  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-208 .text.json_object_dotget_string 00000017  00000000  00000000  00002ccc  2**2
+208 .text.json_object_dotget_string 00000017  00000000  00000000  00002cac  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-209 .text.json_array_get_string 00000017  00000000  00000000  00002ce4  2**2
+209 .text.json_array_get_string 00000017  00000000  00000000  00002cc4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-210 .text.json_value_get_number 0000001d  00000000  00000000  00002cfc  2**2
+210 .text.json_value_get_number 0000001d  00000000  00000000  00002cdc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-211 .text.json_object_get_number 00000019  00000000  00000000  00002d1c  2**2
+211 .text.json_object_get_number 00000019  00000000  00000000  00002cfc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-212 .text.json_object_dotget_number 00000019  00000000  00000000  00002d38  2**2
+212 .text.json_object_dotget_number 00000019  00000000  00000000  00002d18  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-213 .text.json_array_get_number 00000019  00000000  00000000  00002d54  2**2
+213 .text.json_array_get_number 00000019  00000000  00000000  00002d34  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-214 .text.json_value_get_boolean 00000018  00000000  00000000  00002d70  2**2
+214 .text.json_value_get_boolean 00000018  00000000  00000000  00002d50  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-215 .text.json_object_get_boolean 00000017  00000000  00000000  00002d88  2**2
+215 .text.json_object_get_boolean 00000017  00000000  00000000  00002d68  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-216 .text.json_object_dotget_boolean 00000017  00000000  00000000  00002da0  2**2
+216 .text.json_object_dotget_boolean 00000017  00000000  00000000  00002d80  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-217 .text.json_array_get_boolean 00000017  00000000  00000000  00002db8  2**2
+217 .text.json_array_get_boolean 00000017  00000000  00000000  00002d98  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-218 .text.json_serialize_to_buffer_r 0000035c  00000000  00000000  00002dd0  2**2
+218 .text.json_serialize_to_buffer_r 0000035c  00000000  00000000  00002db0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-219 .rodata.json_serialize_to_buffer_r 0000001c  00000000  00000000  0000312c  2**2
+219 .rodata.json_serialize_to_buffer_r 0000001c  00000000  00000000  0000310c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-220 .text.json_value_get_parent 0000000d  00000000  00000000  00003148  2**2
+220 .text.json_value_get_parent 0000000d  00000000  00000000  00003128  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-221 .text.json_value_free 00000044  00000000  00000000  00003158  2**2
+221 .text.json_value_free 00000044  00000000  00000000  00003138  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-222 .text.json_object_free 00000046  00000000  00000000  0000319c  2**2
+222 .text.json_object_free 00000046  00000000  00000000  0000317c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-223 .text.json_array_free 0000002f  00000000  00000000  000031e4  2**2
+223 .text.json_array_free 0000002f  00000000  00000000  000031c4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-224 .text.json_object_remove_internal 0000009c  00000000  00000000  00003214  2**2
+224 .text.json_object_remove_internal 0000009c  00000000  00000000  000031f4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-225 .text.json_object_dotremove_internal 00000050  00000000  00000000  000032b0  2**2
+225 .text.json_object_dotremove_internal 00000050  00000000  00000000  00003290  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-226 .text.json_value_init_object 00000036  00000000  00000000  00003300  2**2
+226 .text.json_value_init_object 00000036  00000000  00000000  000032e0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-227 .text.json_value_init_array 00000036  00000000  00000000  00003338  2**2
+227 .text.json_value_init_array 00000036  00000000  00000000  00003318  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-228 .text.json_value_init_string 0000004c  00000000  00000000  00003370  2**2
+228 .text.json_value_init_string 0000004c  00000000  00000000  00003350  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-229 .text.json_value_init_number 00000044  00000000  00000000  000033bc  2**2
+229 .text.json_value_init_number 00000044  00000000  00000000  0000339c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-230 .text.parse_number_value 0000004e  00000000  00000000  00003400  2**2
+230 .text.parse_number_value 0000004e  00000000  00000000  000033e0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-231 .text.json_value_init_boolean 00000026  00000000  00000000  00003450  2**2
+231 .text.json_value_init_boolean 00000026  00000000  00000000  00003430  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-232 .text.parse_boolean_value 00000045  00000000  00000000  00003478  2**2
+232 .text.parse_boolean_value 00000045  00000000  00000000  00003458  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-233 .text.json_value_init_null 00000020  00000000  00000000  000034c0  2**2
+233 .text.json_value_init_null 00000020  00000000  00000000  000034a0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-234 .text.parse_null_value 00000026  00000000  00000000  000034e0  2**2
+234 .text.parse_null_value 00000026  00000000  00000000  000034c0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-235 .text.parse_value 0000008e  00000000  00000000  00003508  2**2
+235 .text.parse_value 0000008e  00000000  00000000  000034e8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-236 .rodata.parse_value 00000168  00000000  00000000  00003598  2**2
+236 .rodata.parse_value 00000168  00000000  00000000  00003578  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-237 .text.json_parse_string 00000038  00000000  00000000  00003700  2**2
+237 .text.json_parse_string 00000038  00000000  00000000  000036e0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-238 .text.json_parse_file 00000028  00000000  00000000  00003738  2**2
+238 .text.json_parse_file 00000028  00000000  00000000  00003718  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-239 .text.parse_object_value 00000186  00000000  00000000  00003760  2**2
+239 .text.parse_object_value 00000186  00000000  00000000  00003740  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-240 .text.parse_array_value 00000116  00000000  00000000  000038e8  2**2
+240 .text.parse_array_value 00000116  00000000  00000000  000038c8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-241 .text.json_parse_string_with_comments 0000004c  00000000  00000000  00003a00  2**2
+241 .text.json_parse_string_with_comments 0000004c  00000000  00000000  000039e0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-242 .text.json_parse_file_with_comments 00000028  00000000  00000000  00003a4c  2**2
+242 .text.json_parse_file_with_comments 00000028  00000000  00000000  00003a2c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-243 .text.json_value_deep_copy 00000182  00000000  00000000  00003a74  2**2
+243 .text.json_value_deep_copy 00000182  00000000  00000000  00003a54  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-244 .rodata.json_value_deep_copy 0000001c  00000000  00000000  00003bf8  2**2
+244 .rodata.json_value_deep_copy 0000001c  00000000  00000000  00003bd8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-245 .text.json_serialization_size 00000020  00000000  00000000  00003c14  2**2
+245 .text.json_serialization_size 00000020  00000000  00000000  00003bf4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-246 .text.json_serialize_to_buffer 00000044  00000000  00000000  00003c34  2**2
+246 .text.json_serialize_to_buffer 00000044  00000000  00000000  00003c14  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-247 .text.json_serialization_size_pretty 00000020  00000000  00000000  00003c78  2**2
+247 .text.json_serialization_size_pretty 00000020  00000000  00000000  00003c58  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-248 .text.json_serialize_to_buffer_pretty 00000044  00000000  00000000  00003c98  2**2
+248 .text.json_serialize_to_buffer_pretty 00000044  00000000  00000000  00003c78  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-249 .text.json_free_serialized_string 0000000f  00000000  00000000  00003cdc  2**2
+249 .text.json_free_serialized_string 0000000f  00000000  00000000  00003cbc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-250 .text.json_serialize_to_string 00000044  00000000  00000000  00003cec  2**2
+250 .text.json_serialize_to_string 00000044  00000000  00000000  00003ccc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-251 .text.json_serialize_to_file 00000060  00000000  00000000  00003d30  2**2
+251 .text.json_serialize_to_file 00000060  00000000  00000000  00003d10  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-252 .text.json_serialize_to_string_pretty 00000044  00000000  00000000  00003d90  2**2
+252 .text.json_serialize_to_string_pretty 00000044  00000000  00000000  00003d70  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-253 .text.json_serialize_to_file_pretty 00000060  00000000  00000000  00003dd4  2**2
+253 .text.json_serialize_to_file_pretty 00000060  00000000  00000000  00003db4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-254 .text.json_array_remove 00000058  00000000  00000000  00003e34  2**2
+254 .text.json_array_remove 00000058  00000000  00000000  00003e14  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-255 .text.json_array_replace_value 00000059  00000000  00000000  00003e8c  2**2
+255 .text.json_array_replace_value 00000059  00000000  00000000  00003e6c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-256 .text.json_array_replace_string 00000034  00000000  00000000  00003ee8  2**2
+256 .text.json_array_replace_string 00000034  00000000  00000000  00003ec8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-257 .text.json_array_replace_number 00000034  00000000  00000000  00003f1c  2**2
+257 .text.json_array_replace_number 00000034  00000000  00000000  00003efc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-258 .text.json_array_replace_boolean 00000034  00000000  00000000  00003f50  2**2
+258 .text.json_array_replace_boolean 00000034  00000000  00000000  00003f30  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-259 .text.json_array_replace_null 00000030  00000000  00000000  00003f84  2**2
+259 .text.json_array_replace_null 00000030  00000000  00000000  00003f64  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-260 .text.json_array_clear 00000034  00000000  00000000  00003fb4  2**2
+260 .text.json_array_clear 00000034  00000000  00000000  00003f94  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-261 .text.json_array_append_value 00000030  00000000  00000000  00003fe8  2**2
+261 .text.json_array_append_value 00000030  00000000  00000000  00003fc8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-262 .text.json_array_append_string 00000032  00000000  00000000  00004018  2**2
+262 .text.json_array_append_string 00000032  00000000  00000000  00003ff8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-263 .text.json_array_append_number 00000034  00000000  00000000  0000404c  2**2
+263 .text.json_array_append_number 00000034  00000000  00000000  0000402c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-264 .text.json_array_append_boolean 00000032  00000000  00000000  00004080  2**2
+264 .text.json_array_append_boolean 00000032  00000000  00000000  00004060  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-265 .text.json_array_append_null 00000030  00000000  00000000  000040b4  2**2
+265 .text.json_array_append_null 00000030  00000000  00000000  00004094  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-266 .text.json_object_set_value 00000092  00000000  00000000  000040e4  2**2
+266 .text.json_object_set_value 00000092  00000000  00000000  000040c4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-267 .text.json_object_set_string 0000001c  00000000  00000000  00004178  2**2
+267 .text.json_object_set_string 0000001c  00000000  00000000  00004158  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-268 .text.json_object_set_number 0000001d  00000000  00000000  00004194  2**2
+268 .text.json_object_set_number 0000001d  00000000  00000000  00004174  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-269 .text.json_object_set_boolean 0000001c  00000000  00000000  000041b4  2**2
+269 .text.json_object_set_boolean 0000001c  00000000  00000000  00004194  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-270 .text.json_object_set_null 00000019  00000000  00000000  000041d0  2**2
+270 .text.json_object_set_null 00000019  00000000  00000000  000041b0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-271 .text.json_object_dotset_value 000000d6  00000000  00000000  000041ec  2**2
+271 .text.json_object_dotset_value 000000d6  00000000  00000000  000041cc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-272 .text.json_object_dotset_string 00000034  00000000  00000000  000042c4  2**2
+272 .text.json_object_dotset_string 00000034  00000000  00000000  000042a4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-273 .text.json_object_dotset_number 00000034  00000000  00000000  000042f8  2**2
+273 .text.json_object_dotset_number 00000034  00000000  00000000  000042d8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-274 .text.json_object_dotset_boolean 00000034  00000000  00000000  0000432c  2**2
+274 .text.json_object_dotset_boolean 00000034  00000000  00000000  0000430c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-275 .text.json_object_dotset_null 00000030  00000000  00000000  00004360  2**2
+275 .text.json_object_dotset_null 00000030  00000000  00000000  00004340  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-276 .text.json_object_remove 00000014  00000000  00000000  00004390  2**2
+276 .text.json_object_remove 00000014  00000000  00000000  00004370  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-277 .text.json_object_dotremove 00000014  00000000  00000000  000043a4  2**2
+277 .text.json_object_dotremove 00000014  00000000  00000000  00004384  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-278 .text.json_object_clear 00000044  00000000  00000000  000043b8  2**2
+278 .text.json_object_clear 00000044  00000000  00000000  00004398  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-279 .text.json_validate 00000148  00000000  00000000  000043fc  2**2
+279 .text.json_validate 00000148  00000000  00000000  000043dc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-280 .rodata.json_validate 0000001c  00000000  00000000  00004544  2**2
+280 .rodata.json_validate 0000001c  00000000  00000000  00004524  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-281 .text.json_value_equals 000001b2  00000000  00000000  00004560  2**2
+281 .text.json_value_equals 000001b2  00000000  00000000  00004540  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-282 .rodata.json_value_equals 0000001c  00000000  00000000  00004714  2**2
+282 .rodata.json_value_equals 0000001c  00000000  00000000  000046f4  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-283 .text.json_type 00000010  00000000  00000000  00004730  2**2
+283 .text.json_type 00000010  00000000  00000000  00004710  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-284 .text.json_object 00000010  00000000  00000000  00004740  2**2
+284 .text.json_object 00000010  00000000  00000000  00004720  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-285 .text.json_array 00000010  00000000  00000000  00004750  2**2
+285 .text.json_array 00000010  00000000  00000000  00004730  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-286 .text.json_string 00000010  00000000  00000000  00004760  2**2
+286 .text.json_string 00000010  00000000  00000000  00004740  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-287 .text.json_number 00000012  00000000  00000000  00004770  2**2
+287 .text.json_number 00000012  00000000  00000000  00004750  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-288 .text.json_boolean 00000010  00000000  00000000  00004784  2**2
+288 .text.json_boolean 00000010  00000000  00000000  00004764  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-289 .text.json_set_allocation_functions 0000000f  00000000  00000000  00004794  2**2
+289 .text.json_set_allocation_functions 0000000f  00000000  00000000  00004774  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-290 .text.json_set_escape_slashes 0000000a  00000000  00000000  000047a4  2**2
+290 .text.json_set_escape_slashes 0000000a  00000000  00000000  00004784  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-291 .text.i2c_master_write_slave 0000004e  00000000  00000000  000047b0  2**2
+291 .text.i2c_master_write_slave 0000004e  00000000  00000000  00004790  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-292 .text.i2c_master_init 00000038  00000000  00000000  00004800  2**2
+292 .text.i2c_master_init 00000038  00000000  00000000  000047e0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-293 .text.command 00000058  00000000  00000000  00004838  2**2
+293 .text.command 00000058  00000000  00000000  00004818  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-294 .text.clearDisplay 00000016  00000000  00000000  00004890  2**2
+294 .text.clearDisplay 00000016  00000000  00000000  00004870  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-295 .text.fillDisplay 00000016  00000000  00000000  000048a8  2**2
+295 .text.fillDisplay 00000016  00000000  00000000  00004888  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-296 .text.clearBox 0000002a  00000000  00000000  000048c0  2**2
+296 .text.clearBox 0000002a  00000000  00000000  000048a0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-297 .text.begin   00000137  00000000  00000000  000048ec  2**2
+297 .text.begin   00000137  00000000  00000000  000048cc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-298 .text.display 000000fb  00000000  00000000  00004a24  2**2
+298 .text.display 000000fb  00000000  00000000  00004a04  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-299 .text.drawPixel 0000011b  00000000  00000000  00004b20  2**2
+299 .text.drawPixel 0000011b  00000000  00000000  00004b00  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-300 .text.HLine   000000bb  00000000  00000000  00004c3c  2**2
+300 .text.HLine   000000bb  00000000  00000000  00004c1c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-301 .text.VLine   000000e2  00000000  00000000  00004cf8  2**2
+301 .text.VLine   000000e2  00000000  00000000  00004cd8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-302 .text.drawChar8 00000033  00000000  00000000  00004ddc  2**2
+302 .text.drawChar8 00000033  00000000  00000000  00004dbc  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-303 .text.drawChar16 0000003c  00000000  00000000  00004e10  2**2
+303 .text.drawChar16 0000003c  00000000  00000000  00004df0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-304 .text.wifi_event_handler 00000054  00000000  00000000  00004e4c  2**2
+304 .text.wifi_event_handler 00000054  00000000  00000000  00004e2c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-305 .text.drawCharFromString 0000028f  00000000  00000000  00004ea0  2**2
+305 .text.drawCharFromString 0000028f  00000000  00000000  00004e80  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-306 .rodata.drawCharFromString 0000012c  00000000  00000000  00005130  2**2
+306 .rodata.drawCharFromString 0000012c  00000000  00000000  00005110  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
-307 .text.drawNumber 0000003a  00000000  00000000  0000525c  2**2
+307 .text.drawNumber 0000003a  00000000  00000000  0000523c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-308 .text.drawString 00000038  00000000  00000000  00005298  2**2
+308 .text.drawString 00000038  00000000  00000000  00005278  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-309 .text.displayJSONTask 00000053  00000000  00000000  000052d0  2**2
+309 .text.myJsonStruct_init 00000018  00000000  00000000  000052b0  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-310 .text.myJsonStruct_init 00000018  00000000  00000000  00005324  2**2
+310 .text.displayJSONTask 00000053  00000000  00000000  000052c8  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-311 .text.fillStruct 00000026  00000000  00000000  0000533c  2**2
+311 .text.fillStruct 00000026  00000000  00000000  0000531c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-312 .text.parseJSON 000000cc  00000000  00000000  00005364  2**2
+312 .text.parseJSON 000000cc  00000000  00000000  00005344  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-313 .text.parseJSONTask 00000016  00000000  00000000  00005430  2**2
+313 .text.parseJSONTask 00000016  00000000  00000000  00005410  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-314 .text.app_main 00000131  00000000  00000000  00005448  2**2
+314 .text.app_main 00000125  00000000  00000000  00005428  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
-315 .rodata.__func__$10786 0000000a  00000000  00000000  0000557c  2**2
+315 .rodata.__func__$10786 0000000a  00000000  00000000  00005550  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-316 .rodata.__func__$10802 00000009  00000000  00000000  00005588  2**2
+316 .rodata.__func__$10802 00000009  00000000  00000000  0000555c  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-317 .bss.rotation 00000001  00000000  00000000  00005591  2**0
+317 .bss.rotation 00000001  00000000  00000000  00005565  2**0
                   ALLOC
-318 .bss.myJsonStruct 00000108  00000000  00000000  00005594  2**2
+318 .bss.myJsonStruct 00000108  00000000  00000000  00005568  2**2
                   ALLOC
-319 .data.jsonString 00000100  00000000  00000000  00005594  2**2
+319 .data.jsonString 00000100  00000000  00000000  00005568  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-320 .bss.xSemaphore 00000004  00000000  00000000  00005694  2**2
+320 .bss.xSemaphore 00000004  00000000  00000000  00005668  2**2
                   ALLOC
-321 .bss.wifi_event_group 00000004  00000000  00000000  00005694  2**2
+321 .bss.wifi_event_group 00000004  00000000  00000000  00005668  2**2
                   ALLOC
-322 .data.parson_escape_slashes 00000004  00000000  00000000  00005694  2**2
+322 .data.parson_escape_slashes 00000004  00000000  00000000  00005668  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-323 .data.parson_free 00000004  00000000  00000000  00005698  2**2
+323 .data.parson_free 00000004  00000000  00000000  0000566c  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, DATA
-324 .data.parson_malloc 00000004  00000000  00000000  0000569c  2**2
+324 .data.parson_malloc 00000004  00000000  00000000  00005670  2**2
                   CONTENTS, ALLOC, LOAD, RELOC, DATA
-325 .data.ohm16   00000014  00000000  00000000  000056a0  2**2
+325 .data.ohm16   00000014  00000000  00000000  00005674  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-326 .data.degree16 00000014  00000000  00000000  000056b4  2**2
+326 .data.degree16 00000014  00000000  00000000  00005688  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-327 .data.wifi16  00000014  00000000  00000000  000056c8  2**2
+327 .data.wifi16  00000014  00000000  00000000  0000569c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-328 .data.percent16 00000014  00000000  00000000  000056dc  2**2
+328 .data.percent16 00000014  00000000  00000000  000056b0  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-329 .data.Z16     00000014  00000000  00000000  000056f0  2**2
+329 .data.Z16     00000014  00000000  00000000  000056c4  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-330 .data.Y16     00000014  00000000  00000000  00005704  2**2
+330 .data.Y16     00000014  00000000  00000000  000056d8  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-331 .data.X16     00000014  00000000  00000000  00005718  2**2
+331 .data.X16     00000014  00000000  00000000  000056ec  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-332 .data.W16     00000014  00000000  00000000  0000572c  2**2
+332 .data.W16     00000014  00000000  00000000  00005700  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-333 .data.V16     00000014  00000000  00000000  00005740  2**2
+333 .data.V16     00000014  00000000  00000000  00005714  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-334 .data.U16     00000014  00000000  00000000  00005754  2**2
+334 .data.U16     00000014  00000000  00000000  00005728  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-335 .data.T16     00000014  00000000  00000000  00005768  2**2
+335 .data.T16     00000014  00000000  00000000  0000573c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-336 .data.S16     00000014  00000000  00000000  0000577c  2**2
+336 .data.S16     00000014  00000000  00000000  00005750  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-337 .data.R16     00000014  00000000  00000000  00005790  2**2
+337 .data.R16     00000014  00000000  00000000  00005764  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-338 .data.Q16     00000014  00000000  00000000  000057a4  2**2
+338 .data.Q16     00000014  00000000  00000000  00005778  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-339 .data.P16     00000014  00000000  00000000  000057b8  2**2
+339 .data.P16     00000014  00000000  00000000  0000578c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-340 .data.O16     00000014  00000000  00000000  000057cc  2**2
+340 .data.O16     00000014  00000000  00000000  000057a0  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-341 .data.N16     00000014  00000000  00000000  000057e0  2**2
+341 .data.N16     00000014  00000000  00000000  000057b4  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-342 .data.M16     00000014  00000000  00000000  000057f4  2**2
+342 .data.M16     00000014  00000000  00000000  000057c8  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-343 .data.L16     00000014  00000000  00000000  00005808  2**2
+343 .data.L16     00000014  00000000  00000000  000057dc  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-344 .data.K16     00000014  00000000  00000000  0000581c  2**2
+344 .data.K16     00000014  00000000  00000000  000057f0  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-345 .data.J16     00000014  00000000  00000000  00005830  2**2
+345 .data.J16     00000014  00000000  00000000  00005804  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-346 .data.I16     00000014  00000000  00000000  00005844  2**2
+346 .data.I16     00000014  00000000  00000000  00005818  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-347 .data.H16     00000014  00000000  00000000  00005858  2**2
+347 .data.H16     00000014  00000000  00000000  0000582c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-348 .data.G16     00000014  00000000  00000000  0000586c  2**2
+348 .data.G16     00000014  00000000  00000000  00005840  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-349 .data.F16     00000014  00000000  00000000  00005880  2**2
+349 .data.F16     00000014  00000000  00000000  00005854  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-350 .data.E16     00000014  00000000  00000000  00005894  2**2
+350 .data.E16     00000014  00000000  00000000  00005868  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-351 .data.D16     00000014  00000000  00000000  000058a8  2**2
+351 .data.D16     00000014  00000000  00000000  0000587c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-352 .data.C16     00000014  00000000  00000000  000058bc  2**2
+352 .data.C16     00000014  00000000  00000000  00005890  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-353 .data.B16     00000014  00000000  00000000  000058d0  2**2
+353 .data.B16     00000014  00000000  00000000  000058a4  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-354 .data.A16     00000014  00000000  00000000  000058e4  2**2
+354 .data.A16     00000014  00000000  00000000  000058b8  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-355 .data.zero16  00000014  00000000  00000000  000058f8  2**2
+355 .data.zero16  00000014  00000000  00000000  000058cc  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-356 .data.nine16  00000014  00000000  00000000  0000590c  2**2
+356 .data.nine16  00000014  00000000  00000000  000058e0  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-357 .data.eight16 00000014  00000000  00000000  00005920  2**2
+357 .data.eight16 00000014  00000000  00000000  000058f4  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-358 .data.seven16 00000014  00000000  00000000  00005934  2**2
+358 .data.seven16 00000014  00000000  00000000  00005908  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-359 .data.six16   00000014  00000000  00000000  00005948  2**2
+359 .data.six16   00000014  00000000  00000000  0000591c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-360 .data.five16  00000014  00000000  00000000  0000595c  2**2
+360 .data.five16  00000014  00000000  00000000  00005930  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-361 .data.four16  00000014  00000000  00000000  00005970  2**2
+361 .data.four16  00000014  00000000  00000000  00005944  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-362 .data.three16 00000014  00000000  00000000  00005984  2**2
+362 .data.three16 00000014  00000000  00000000  00005958  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-363 .data.two16   00000014  00000000  00000000  00005998  2**2
+363 .data.two16   00000014  00000000  00000000  0000596c  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-364 .data.one16   00000014  00000000  00000000  000059ac  2**2
+364 .data.one16   00000014  00000000  00000000  00005980  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-365 .bss.blank16  00000014  00000000  00000000  000059c0  2**2
+365 .bss.blank16  00000014  00000000  00000000  00005994  2**2
                   ALLOC
-366 .data.test16  00000014  00000000  00000000  000059c0  2**2
+366 .data.test16  00000014  00000000  00000000  00005994  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-367 .data.font    00000500  00000000  00000000  000059d4  2**2
+367 .data.font    00000500  00000000  00000000  000059a8  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-368 .debug_frame  00000e98  00000000  00000000  00005ed4  2**2
+368 .debug_frame  00000e98  00000000  00000000  00005ea8  2**2
                   CONTENTS, RELOC, READONLY, DEBUGGING
-369 .debug_info   000099d5  00000000  00000000  00006d6c  2**0
+369 .debug_info   00009977  00000000  00000000  00006d40  2**0
                   CONTENTS, RELOC, READONLY, DEBUGGING
-370 .debug_abbrev 0000062b  00000000  00000000  00010741  2**0
+370 .debug_abbrev 00000610  00000000  00000000  000106b7  2**0
                   CONTENTS, READONLY, DEBUGGING
-371 .debug_loc    000069cf  00000000  00000000  00010d6c  2**0
+371 .debug_loc    000069cf  00000000  00000000  00010cc7  2**0
                   CONTENTS, RELOC, READONLY, DEBUGGING
-372 .debug_aranges 000004f0  00000000  00000000  0001773b  2**0
+372 .debug_aranges 000004f0  00000000  00000000  00017696  2**0
                   CONTENTS, RELOC, READONLY, DEBUGGING
-373 .debug_ranges 000004e0  00000000  00000000  00017c2b  2**0
+373 .debug_ranges 000004e0  00000000  00000000  00017b86  2**0
                   CONTENTS, RELOC, READONLY, DEBUGGING
-374 .debug_line   000041fd  00000000  00000000  0001810b  2**0
+374 .debug_line   000041f7  00000000  00000000  00018066  2**0
                   CONTENTS, RELOC, READONLY, DEBUGGING
-375 .debug_str    000037e1  00000000  00000000  0001c308  2**0
+375 .debug_str    000037e1  00000000  00000000  0001c25d  2**0
                   CONTENTS, READONLY, DEBUGGING
-376 .comment      0000003b  00000000  00000000  0001fae9  2**0
+376 .comment      0000003b  00000000  00000000  0001fa3e  2**0
                   CONTENTS, READONLY
-377 .xtensa.info  00000038  00000000  00000000  0001fb24  2**0
+377 .xtensa.info  00000038  00000000  00000000  0001fa79  2**0
                   CONTENTS, READONLY
-378 .xt.lit       00000490  00000000  00000000  0001fb5c  2**0
+378 .xt.lit       00000490  00000000  00000000  0001fab1  2**0
                   CONTENTS, RELOC, READONLY
-379 .xt.prop      00005070  00000000  00000000  0001ffec  2**0
+379 .xt.prop      00005070  00000000  00000000  0001ff41  2**0
                   CONTENTS, RELOC, READONLY

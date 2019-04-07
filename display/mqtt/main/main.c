@@ -634,11 +634,11 @@ void parseJSON(char *js)
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
 
-    xSemaphoreTake(xSemaphore,0);   // block time of 0 polls mutex
-    fillStruct( json_object_get_string(data, "name"), 
+    //xSemaphoreTake(xSemaphore,0);   // block time of 0 polls mutex
+    /*fillStruct( json_object_get_string(data, "name"), 
                 json_object_get_number(data, "age"), 
-                json_object_get_boolean(data, "admin"));
-    xSemaphoreGive(xSemaphore);
+                json_object_get_boolean(data, "admin"));*/
+    //xSemaphoreGive(xSemaphore);
 }
 
 void parseJSONTask(void *arg)
@@ -827,13 +827,14 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
+    drawChar16(Z,0,0);
     display();
 
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
-    myJsonStruct_init();
-    xTaskCreate(&displayJSONTask, "display JSON task", (1024 * 4), NULL, 5, NULL);
+    //myJsonStruct_init();
+    //xTaskCreate(&displayJSONTask, "display JSON task", (1024 * 4), NULL, 5, NULL);
 
     while(1)
     {
