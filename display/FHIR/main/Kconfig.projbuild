@@ -12,8 +12,6 @@ menu "Example Configuration"
 	    help
 		WiFi password (WPA or WPA2) for the example to use.
 
-	enu "Example Configuration"
-
     menu "I2C Master"
         config I2C_MASTER_SCL
             int "SCL GPIO Num"
