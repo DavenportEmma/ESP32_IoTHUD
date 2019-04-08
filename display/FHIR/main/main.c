@@ -562,7 +562,7 @@ void drawString(char s[], int x, int y)
         drawCharFromString(s[i],x,y);
         x = x + 12;
     }
-    display();
+    //display();
 }
 
 /*
@@ -590,31 +590,43 @@ void drawString(char s[], int x, int y)
 */
 void myJsonStruct_init()
 {
-    myJsonStruct.name[0] = '\0';
+    memset(myJsonStruct.name, '\0', 256);
+    strncpy(myJsonStruct.name,"default",7);
     myJsonStruct.age = 0;
     myJsonStruct.admin = false;
+    printf("%s\t%i\t%d\n",myJsonStruct.name,myJsonStruct.age,myJsonStruct.admin);
 }
 
 void displayJSONTask(void *arg)
-{
+{   char n[256];
+    int a;
+    bool admin;
     while(1)
-    {
-        //xSemaphoreTake(xSemaphore,0);
-        clearBox(0,1,127,5);
-        drawString(myJsonStruct.name,0,1);
-        drawNumber(myJsonStruct.age,0,3);
-        drawNumber(myJsonStruct.admin,0,5);
-        //xSemaphoreGive(xSemaphore);
-        display();
+    {   
+        printf("display json task\n");
+        if(xSemaphoreTake(xSemaphore,1) == pdTRUE)
+        {
+            clearBox(0,1,127,5);
+            drawString(myJsonStruct.name,0,1);
+            drawNumber(myJsonStruct.age,0,3);
+            drawNumber(myJsonStruct.admin,0,5);
+            xSemaphoreGive(xSemaphore);
+            display();
+        }
+        else
+        {
+            printf("displayJSONTask unable to take semaphore\n");
+        }
+        
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
 
-void fillStruct(char n[256], int a, bool admin)
+void fillStruct(char n[256], int len, int a, bool admin)
 {    
-    strncpy(myJsonStruct.name, n, 256);
-    myJsonStruct.name[255] = '\0';
+    memset(myJsonStruct.name, '\0', 256);
+    strncpy(myJsonStruct.name, n, len);
     myJsonStruct.age = a;
     myJsonStruct.admin = admin;
 }
@@ -634,11 +646,22 @@ void parseJSON(char *js)
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
 
-    //xSemaphoreTake(xSemaphore,0);   // block time of 0 polls mutex
-    /*fillStruct( json_object_get_string(data, "name"), 
-                json_object_get_number(data, "age"), 
-                json_object_get_boolean(data, "admin"));*/
-    //xSemaphoreGive(xSemaphore);
+    // xSemaphoreTake(xHandle, xTicksToWait)
+    // the time in ticks to wait for the semaphore to become available
+    // 1 = block indefinitely without a timeout
+    if(xSemaphoreTake(xSemaphore,1) == pdTRUE)
+    {
+        fillStruct( json_object_get_string(data, "name"), 
+            strlen(json_object_get_string(data, "name")),
+            json_object_get_number(data, "age"), 
+            json_object_get_boolean(data, "admin"));
+        xSemaphoreGive(xSemaphore);
+    }
+    else
+    {
+        printf("parseJSON() unable to take semaphore\n");
+    }
+    
 }
 
 void parseJSONTask(void *arg)
@@ -721,9 +744,6 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
             break;
         case SYSTEM_EVENT_STA_GOT_IP:
             xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-            drawChar16(wifi,118,0);
-            display();
-
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
             esp_wifi_connect();
@@ -827,14 +847,13 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
-    drawChar16(Z,0,0);
     display();
 
+    myJsonStruct_init();
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
-    //myJsonStruct_init();
-    //xTaskCreate(&displayJSONTask, "display JSON task", (1024 * 4), NULL, 5, NULL);
+    xTaskCreate(&displayJSONTask, "display JSON task", (1024 * 4), NULL, 5, NULL);
 
     while(1)
     {
