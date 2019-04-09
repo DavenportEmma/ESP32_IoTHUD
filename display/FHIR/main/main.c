@@ -32,6 +32,7 @@ static int CONNECTED_BIT = BIT0;
 
 char jsonString[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
 
+static int 
 static struct jsonStruct
 {
     char name[256];
@@ -597,32 +598,6 @@ void myJsonStruct_init()
     printf("%s\t%i\t%d\n",myJsonStruct.name,myJsonStruct.age,myJsonStruct.admin);
 }
 
-void displayJSONTask(void *arg)
-{   char n[256];
-    int a;
-    bool admin;
-    while(1)
-    {   
-        printf("display json task\n");
-        if(xSemaphoreTake(xSemaphore,1) == pdTRUE)
-        {
-            clearBox(0,1,127,5);
-            drawString(myJsonStruct.name,0,1);
-            drawNumber(myJsonStruct.age,0,3);
-            drawNumber(myJsonStruct.admin,0,5);
-            xSemaphoreGive(xSemaphore);
-            display();
-        }
-        else
-        {
-            printf("displayJSONTask unable to take semaphore\n");
-        }
-        
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-    vTaskDelete(NULL);
-}
-
 void fillStruct(char n[256], int len, int a, bool admin)
 {    
     memset(myJsonStruct.name, '\0', 256);
@@ -642,25 +617,18 @@ void parseJSON(char *js)
     {
         return;
     }
-	printf("%s\n",json_object_get_string(data, "name"));
+    
+	/*printf("%s\n",json_object_get_string(data, "name"));
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
 
     // xSemaphoreTake(xHandle, xTicksToWait)
     // the time in ticks to wait for the semaphore to become available
     // 1 = block indefinitely without a timeout
-    if(xSemaphoreTake(xSemaphore,1) == pdTRUE)
-    {
-        fillStruct( json_object_get_string(data, "name"), 
-            strlen(json_object_get_string(data, "name")),
-            json_object_get_number(data, "age"), 
-            json_object_get_boolean(data, "admin"));
-        xSemaphoreGive(xSemaphore);
-    }
-    else
-    {
-        printf("parseJSON() unable to take semaphore\n");
-    }
+    fillStruct( json_object_get_string(data, "name"), 
+        strlen(json_object_get_string(data, "name")),
+        json_object_get_number(data, "age"), 
+        json_object_get_boolean(data, "admin"));*/
     
 }
 
@@ -849,11 +817,9 @@ void app_main() // vTaskStartScheduler is created here
     clearDisplay();
     display();
 
-    myJsonStruct_init();
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
-    xTaskCreate(&displayJSONTask, "display JSON task", (1024 * 4), NULL, 5, NULL);
 
     while(1)
     {
