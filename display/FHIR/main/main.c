@@ -30,9 +30,8 @@ static EventGroupHandle_t wifi_event_group;
 static SemaphoreHandle_t xSemaphore = NULL;
 static int CONNECTED_BIT = BIT0;
 
-char jsonString[256] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+static char jsonString[1024] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
 
-static int 
 static struct jsonStruct
 {
     char name[256];
@@ -608,7 +607,7 @@ void fillStruct(char n[256], int len, int a, bool admin)
 
 void parseJSON(char *js)
 {
-    printf("%s\n",js);
+    //printf("%s\n",js);
     JSON_Value *root_value;
     JSON_Object *data;
     root_value = json_parse_string(js);
@@ -617,7 +616,7 @@ void parseJSON(char *js)
     {
         return;
     }
-    
+    printf("%s\n",json_object_dotget_string(data,"code.coding.code"));
 	/*printf("%s\n",json_object_get_string(data, "name"));
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
@@ -632,9 +631,21 @@ void parseJSON(char *js)
     
 }
 
-void parseJSONTask(void *arg)
+void parseJSONTask(char *js)
 {
-    parseJSON((char *)arg); 
+    JSON_Value *root_value;
+    JSON_Object *data;
+    JSON_Object *codeObj;
+    JSON_Array *codingArray;
+    root_value = json_parse_string(js);
+	data = json_value_get_object(root_value);
+    if(data == NULL)
+    {
+        vTaskDelete(NULL);
+    }
+    codeObj = json_object_get_object(data,"code");
+    codingArray = json_object_get_array(codeObj,"coding");
+    printf("%s\n",json_array_get_string(codingArray,"code"));
     vTaskDelete(NULL);
 }
 
@@ -644,7 +655,6 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     // get the client associated with the event
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
-    char message[256];
     // your_context_t *context = event->context;
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
@@ -686,12 +696,9 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
-            strncpy(message, event->data, event->data_len);
-            message[event->data_len] = '\0';
-            printf("%s\n",message);
             strncpy(jsonString, event->data, event->data_len);
             jsonString[event->data_len] = '\0';
-            xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8), (void *)jsonString, 5, NULL);
+            xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8),  (void *)jsonString, 5, NULL);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
