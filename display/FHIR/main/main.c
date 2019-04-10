@@ -30,7 +30,7 @@ static EventGroupHandle_t wifi_event_group;
 static SemaphoreHandle_t xSemaphore = NULL;
 static int CONNECTED_BIT = BIT0;
 
-static char jsonString[1024] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
+static char jsonString[1024 * 4] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
 
 static struct jsonStruct
 {
@@ -607,16 +607,19 @@ void fillStruct(char n[256], int len, int a, bool admin)
 
 void parseJSON(char *js)
 {
-    //printf("%s\n",js);
-    JSON_Value *root_value;
-    JSON_Object *data;
+   	JSON_Value *root_value;
+	JSON_Object *data, *codeObj, *system;
+	JSON_Array *codingArr;
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
     if(data == NULL)
     {
         return;
     }
-    printf("%s\n",json_object_dotget_string(data,"code.coding.code"));
+	codeObj = json_object_get_object(data,"code");
+	codingArr = json_object_get_array(codeObj,"coding");
+	system = json_array_get_object(codingArr,0);
+	printf("%s\n",json_object_get_string(system,"code"));
 	/*printf("%s\n",json_object_get_string(data, "name"));
 	printf("%f\n",json_object_get_number(data, "age"));
 	printf("%d\n",json_object_get_boolean(data, "admin"));
@@ -634,18 +637,14 @@ void parseJSON(char *js)
 void parseJSONTask(char *js)
 {
     JSON_Value *root_value;
-    JSON_Object *data;
-    JSON_Object *codeObj;
+    JSON_Object *data, *codeObj, *system;
     JSON_Array *codingArray;
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
-    if(data == NULL)
-    {
-        vTaskDelete(NULL);
-    }
     codeObj = json_object_get_object(data,"code");
     codingArray = json_object_get_array(codeObj,"coding");
-    printf("%s\n",json_array_get_string(codingArray,"code"));
+    system = json_array_get_object(codingArray,0);
+    printf("%s\n",json_object_get_string(system,"code"));
     vTaskDelete(NULL);
 }
 
@@ -747,10 +746,10 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = "VM0196906",
-            .password = "8w2knZfjpdyb",
-            //.ssid = "Conor's phone",
-            //.password = "password12345",
+            //.ssid = "VM0196906",
+            //.password = "8w2knZfjpdyb",
+            .ssid = "Conor's phone",
+            .password = "password12345",
         },
     };
     // set operating mode set to station
@@ -780,6 +779,7 @@ static void mqtt_app_start(void)
         // mqtt event handler
         .event_handle = mqtt_event_handler,
         // .user_context = (void *)your_context
+        .buffer_size = (1024 * 4)
     };
 
     #if CONFIG_BROKER_URL_FROM_STDIN
