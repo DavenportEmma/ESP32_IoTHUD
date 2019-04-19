@@ -30,14 +30,7 @@ static EventGroupHandle_t wifi_event_group;
 static SemaphoreHandle_t xSemaphore = NULL;
 static int CONNECTED_BIT = BIT0;
 
-static char jsonString[1024 * 4] = "{\"name\":\"conor\",\"age\":22,\"admin\":true}";
-
-static struct jsonStruct
-{
-    char name[256];
-    int age;
-    bool admin;
-} myJsonStruct;
+static char jsonString[1024 * 4] = "";
 
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
@@ -588,22 +581,7 @@ void drawString(char s[], int x, int y)
             |
             |   MSB
 */
-void myJsonStruct_init()
-{
-    memset(myJsonStruct.name, '\0', 256);
-    strncpy(myJsonStruct.name,"default",7);
-    myJsonStruct.age = 0;
-    myJsonStruct.admin = false;
-    printf("%s\t%i\t%d\n",myJsonStruct.name,myJsonStruct.age,myJsonStruct.admin);
-}
 
-void fillStruct(char n[256], int len, int a, bool admin)
-{    
-    memset(myJsonStruct.name, '\0', 256);
-    strncpy(myJsonStruct.name, n, len);
-    myJsonStruct.age = a;
-    myJsonStruct.admin = admin;
-}
 
 void parseJSON(char *js)
 {
@@ -637,14 +615,20 @@ void parseJSON(char *js)
 void parseJSONTask(char *js)
 {
     JSON_Value *root_value;
-    JSON_Object *data, *codeObj, *system;
+    JSON_Object *data, *codeObj, *system, *subject;
     JSON_Array *codingArray;
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
+    if(data == NULL)
+        vTaskDelete(NULL);
+
     codeObj = json_object_get_object(data,"code");
     codingArray = json_object_get_array(codeObj,"coding");
     system = json_array_get_object(codingArray,0);
     printf("%s\n",json_object_get_string(system,"code"));
+
+    subject = json_object_get_object(data,"subject");
+    printf("%s\n",json_object_get_string(subject,"display"));
     vTaskDelete(NULL);
 }
 
@@ -746,10 +730,10 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            //.ssid = "VM0196906",
-            //.password = "8w2knZfjpdyb",
-            .ssid = "Conor's phone",
-            .password = "password12345",
+            .ssid = "VM0196906",
+            .password = "8w2knZfjpdyb",
+            //.ssid = "Conor's phone",
+            //.password = "password12345",
         },
     };
     // set operating mode set to station
