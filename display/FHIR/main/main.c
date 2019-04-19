@@ -582,36 +582,6 @@ void drawString(char s[], int x, int y)
             |   MSB
 */
 
-
-void parseJSON(char *js)
-{
-   	JSON_Value *root_value;
-	JSON_Object *data, *codeObj, *system;
-	JSON_Array *codingArr;
-    root_value = json_parse_string(js);
-	data = json_value_get_object(root_value);
-    if(data == NULL)
-    {
-        return;
-    }
-	codeObj = json_object_get_object(data,"code");
-	codingArr = json_object_get_array(codeObj,"coding");
-	system = json_array_get_object(codingArr,0);
-	printf("%s\n",json_object_get_string(system,"code"));
-	/*printf("%s\n",json_object_get_string(data, "name"));
-	printf("%f\n",json_object_get_number(data, "age"));
-	printf("%d\n",json_object_get_boolean(data, "admin"));
-
-    // xSemaphoreTake(xHandle, xTicksToWait)
-    // the time in ticks to wait for the semaphore to become available
-    // 1 = block indefinitely without a timeout
-    fillStruct( json_object_get_string(data, "name"), 
-        strlen(json_object_get_string(data, "name")),
-        json_object_get_number(data, "age"), 
-        json_object_get_boolean(data, "admin"));*/
-    
-}
-
 void parseJSONTask(char *js)
 {
     JSON_Value *root_value;
