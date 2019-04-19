@@ -137,6 +137,7 @@ static char jsonString[1024 * 4] = "";
     #define eight eight16
     #define nine nine16
     #define blank blank16
+    #define point point16
     #define percent percent16
     #define wifi wifi16
     #define degree degree16 
@@ -530,18 +531,45 @@ void drawCharFromString(char c, int x, int y)
         case 'w': case 'W': drawChar16(W,x,y);  break;    
         case 'x': case 'X': drawChar16(X,x,y);  break;    
         case 'y': case 'Y': drawChar16(Y,x,y);  break;    
-        case 'z': case 'Z': drawChar16(Z,x,y);  break;      
+        case 'z': case 'Z': drawChar16(Z,x,y);  break;
+        case '.': drawChar16(point,x,y);        break;      
         default: break;
     }
 }
 
-void drawNumber(int n, int x, int y)
+void drawInteger(int n, int x, int y)
 {
+    int i;
+    int j = 0;
 	char digit[3];
 	sprintf(digit,"%i",n);
-    drawCharFromString(digit[0],x,y);
-    drawCharFromString(digit[1],x+12,y);
-    drawCharFromString(digit[2],x+24,y);
+    for(i = 0; i < 3; i++)
+    {
+        drawCharFromString(digit[i],x+j,y);
+        j += 12;
+    }
+}
+
+void drawFloat(float n, int x, int y)
+{
+    int i;
+    int j = 0;
+    char digit[9];
+    sprintf(digit,"%f",n);
+    //remove trailing zeros
+    for(i = 8; i > 0; i--)
+    {
+        if(digit[i] == '0' || digit[i] == '\0')
+			digit[i] = '\0';
+
+		else
+			break;
+    }
+    for(i = 0; i < 9; i++)
+    {
+        drawCharFromString(digit[i],x+j,y);
+        j += 12;
+    }
 }
 
 void drawString(char s[], int x, int y)
@@ -585,8 +613,8 @@ void drawString(char s[], int x, int y)
 void parseJSONTask(char *js)
 {
     JSON_Value *root_value;
-    JSON_Object *data, *codeObj, *system, *subject;
-    JSON_Array *codingArray;
+    JSON_Object *data, *codeObj, *system, *subject, *valueQuantity, *interpCodingObj, *interpSystem;
+    JSON_Array *codingArray, *interp, *interpCodingArray;
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
     if(data == NULL)
@@ -597,8 +625,30 @@ void parseJSONTask(char *js)
     system = json_array_get_object(codingArray,0);
     printf("%s\n",json_object_get_string(system,"code"));
 
+    // measured value
+    valueQuantity = json_object_get_object(data,"valueQuantity");
+    printf("%f\n",json_object_get_number(valueQuantity,"value"));
+
+    // patient name
     subject = json_object_get_object(data,"subject");
     printf("%s\n",json_object_get_string(subject,"display"));
+
+    // high or low value warning
+    interp = json_object_get_array(data,"interpretation");
+    interpCodingObj = json_array_get_object(interp,0);
+    interpCodingArray = json_object_get_array(interpCodingObj,"coding");
+    interpSystem = json_array_get_object(interpCodingArray,0);
+    printf("%s\n",json_object_get_string(interpSystem,"code"));
+
+
+    clearDisplay();
+    drawString(json_object_get_string(subject,"display"),0,0);
+    drawFloat(json_object_get_number(valueQuantity,"value"),0,2);
+    // clear box for high or low value warning
+    clearBox(115,2,127,3);
+    drawString(json_object_get_string(interpSystem,"code"),115,2);
+    display();
+
     vTaskDelete(NULL);
 }
 
@@ -776,11 +826,13 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
+    drawFloat(12.3,0,0);
     display();
 
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
+
 
     while(1)
     {
