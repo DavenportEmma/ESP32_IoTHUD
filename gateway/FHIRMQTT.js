@@ -18,21 +18,18 @@ r1.on('line', lineCallback);
 
 function lineCallback(line)
 {
-	if(line == "john")
+	if(line == "patient 1")
 	{
-		client.publish('/topic/conor0',"john's code",publishCallback);
-		var content = fs.readFileSync('../FHIR_examples/glucose.json');
+		var content = fs.readFileSync('../FHIR_examples/patient1/glucose.json');
 	}
-	else if(line == "alice")
+	else if(line == "patient 2")
 	{
-		client.publish('/topic/conor0',"alice's code",publishCallback);
-		var content = fs.readFileSync('../FHIR_examples/co2.json');
+		var content = fs.readFileSync('../FHIR_examples/patient2/glucose.json');
 	
 	}
 	else
 	{
-		client.publish('/topic/conor0',"bob's code",publishCallback);
-		var content = fs.readFileSync('../FHIR_examples/excess.json');
+		var content = fs.readFileSync('../FHIR_examples/patient3/glucose.json');
 	}
 	var jsonContent = JSON.parse(content);
 	delete jsonContent.text;
