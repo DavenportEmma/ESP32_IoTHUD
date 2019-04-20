@@ -16,6 +16,14 @@ client.on('connect', connectCallback); //when a 'connect' event is received call
 client.on('message', messageCallback);
 r1.on('line', lineCallback);
 
+/*
+	list of fhir examples that will work seemlessly with hud
+	co2
+	erythrocyte
+	excess
+	glucose
+	hemoglobin
+*/
 function lineCallback(line)
 {
 	if(line == "patient 1")
