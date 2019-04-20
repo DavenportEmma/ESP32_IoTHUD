@@ -138,6 +138,7 @@ static char jsonString[1024 * 4] = "";
     #define nine nine16
     #define blank blank16
     #define point point16
+    #define slash slash16
     #define percent percent16
     #define wifi wifi16
     #define degree degree16 
@@ -532,7 +533,8 @@ void drawCharFromString(char c, int x, int y)
         case 'x': case 'X': drawChar16(X,x,y);  break;    
         case 'y': case 'Y': drawChar16(Y,x,y);  break;    
         case 'z': case 'Z': drawChar16(Z,x,y);  break;
-        case '.': drawChar16(point,x,y);        break;      
+        case '.': drawChar16(point,x,y);    break;
+        case '/': drawChar16(slash,x,y);    break;      
         default: break;
     }
 }
@@ -642,7 +644,7 @@ void parseJSONTask(char *js)
 
 
     clearDisplay();
-    drawString(json_object_get_string(subject,"display"),0,0);
+    drawString(json_object_getp_string(subject,"display"),0,0);
     drawFloat(json_object_get_number(valueQuantity,"value"),0,2);
     // clear box for high or low value warning
     clearBox(115,2,127,3);
