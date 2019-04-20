@@ -26,19 +26,8 @@ r1.on('line', lineCallback);
 */
 function lineCallback(line)
 {
-	if(line == "patient 1")
-	{
-		var content = fs.readFileSync('../FHIR_examples/patient1/glucose.json');
-	}
-	else if(line == "patient 2")
-	{
-		var content = fs.readFileSync('../FHIR_examples/patient2/glucose.json');
-	
-	}
-	else
-	{
-		var content = fs.readFileSync('../FHIR_examples/patient3/glucose.json');
-	}
+	var filePath = '../FHIR_examples/' + line + '.json';
+	var content = fs.readFileSync(filePath);
 	var jsonContent = JSON.parse(content);
 	delete jsonContent.text;
 	console.log(jsonContent);
