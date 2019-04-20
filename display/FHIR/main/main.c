@@ -535,6 +535,10 @@ void drawCharFromString(char c, int x, int y, int t)
             case 'x': case 'X': drawChar8(X8,x,y);  break;    
             case 'y': case 'Y': drawChar8(Y8,x,y);  break;    
             case 'z': case 'Z': drawChar8(Z8,x,y);  break; 
+            case '[': drawChar8(openSquare8,x,y);   break;
+            case ']': drawChar8(closeSquare8,x,y);  break;
+            case '/': drawChar8(slash8,x,y);        break;
+            case '.': drawChar8(point8,x,y);        break;
             default: break;
         }
     }
@@ -677,13 +681,13 @@ void parseJSONTask(char *js)
 
 
     clearDisplay();
-    drawString(json_object_get_string(subject,"display"),0,0,16,1);
-    drawFloat(json_object_get_number(valueQuantity,"value"),0,2,16);
+    drawString(json_object_get_string(subject,"display"),0,0,8,0);
+    drawFloat(json_object_get_number(valueQuantity,"value"),0,1,16);
     // clear box for high or low value warning
-    clearBox(115,2,127,3);
-    drawString(json_object_get_string(interpSystem,"code"),115,2,16,1);
-    drawString(json_object_get_string(valueQuantity,"code"),0,4,16,1);
-    drawString(json_object_get_string(system,"display"),0,6,16,1);
+    clearBox(115,1,127,2);
+    drawString(json_object_get_string(interpSystem,"code"),115,1,16,0);
+    drawString(json_object_get_string(valueQuantity,"code"),0,3,16,0);
+    drawString(json_object_get_string(system,"display"),0,6,8,1);
     display();
 
     vTaskDelete(NULL);
