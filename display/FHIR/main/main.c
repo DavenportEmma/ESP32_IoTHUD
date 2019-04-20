@@ -97,54 +97,6 @@ static char jsonString[1024 * 4] = "";
 #define SSD1306_ACTIVATE_SCROLL                      0x2F ///< Start scroll
 #define SSD1306_SET_VERTICAL_SCROLL_AREA             0xA3 ///< Set scroll range
 
-// 16px font definitions to clean up functions
-#define TEXT 16
-#if TEXT == 16
-    #define A A16
-    #define B B16
-    #define C C16
-    #define D D16
-    #define E E16
-    #define F F16
-    #define G G16
-    #define H H16
-    #define I I16
-    #define J J16
-    #define K K16
-    #define L L16
-    #define M M16
-    #define N N16
-    #define O O16
-    #define P P16
-    #define Q Q16
-    #define R R16
-    #define S S16
-    #define T T16
-    #define U U16
-    #define V V16
-    #define W W16
-    #define X X16
-    #define Y Y16
-    #define Z Z16
-    #define zero zero16
-    #define one one16
-    #define two two16
-    #define three three16
-    #define four four16
-    #define five five16
-    #define six six16
-    #define seven seven16
-    #define eight eight16
-    #define nine nine16
-    #define blank blank16
-    #define point point16
-    #define slash slash16
-    #define percent percent16
-    #define wifi wifi16
-    #define degree degree16 
-    #define ohm ohm16
-#endif
-
 uint8_t *buffer;
 int8_t vccstate;
 uint8_t rotation = 0;
@@ -469,25 +421,27 @@ void VLine(int16_t x, int16_t y, int16_t h, uint16_t colour)
 
 // draw a character from the ascii.h file
 // characters in this file are 5x8b
-void drawChar8(int c, int16_t x, int16_t y)
+void drawChar8(unsigned char c[5], int16_t x, int16_t y)
 {
     int i;
-
     for(i = 0; i < 5; i++)
     {
-        buffer[(i + x) + (128 * y)] = font[i + (c * 5)];
+        if(((i + x) + (128 * y)) > 1023)
+            break;
+        buffer[(i + x) + (128 * y)] = c[i];
     }
 }
 
 // draw a character from the font16px.h file
 void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
 {
-    int i = 0;
-    int j = 0;
+    int i, j;
     for(i = 0; i < 2; i++)
     {
         for(j = 0; j < 10; j++)
         {
+            if((j + x) + (128 * (i + y)) > 1023)
+                break;
             buffer[(j + x) + (128 * (i + y))] = c[j][i];
         }
     }
@@ -496,47 +450,93 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
 // param t: type of font to be used, 8 or 16 px
 void drawCharFromString(char c, int x, int y, int t)
 {
-    switch(c)
+    if(t == 16)
     {
-        case '0': drawChar16(zero,x,y);       break;
-        case '1': drawChar16(one,x,y);        break;
-        case '2': drawChar16(two,x,y);        break;
-        case '3': drawChar16(three,x,y);      break;
-        case '4': drawChar16(four,x,y);       break;
-        case '5': drawChar16(five,x,y);       break;
-        case '6': drawChar16(six,x,y);        break;
-        case '7': drawChar16(seven,x,y);      break;
-        case '8': drawChar16(eight,x,y);      break;
-        case '9': drawChar16(nine,x,y);       break;
-        case 'a': case 'A': drawChar16(A,x,y);  break;    
-        case 'b': case 'B': drawChar16(B,x,y);  break;    
-        case 'c': case 'C': drawChar16(C,x,y);  break;    
-        case 'd': case 'D': drawChar16(D,x,y);  break;    
-        case 'e': case 'E': drawChar16(E,x,y);  break;    
-        case 'f': case 'F': drawChar16(F,x,y);  break;    
-        case 'g': case 'G': drawChar16(G,x,y);  break;    
-        case 'h': case 'H': drawChar16(H,x,y);  break;    
-        case 'i': case 'I': drawChar16(I,x,y);  break;    
-        case 'j': case 'J': drawChar16(J,x,y);  break;    
-        case 'k': case 'K': drawChar16(K,x,y);  break;    
-        case 'l': case 'L': drawChar16(L,x,y);  break;    
-        case 'm': case 'M': drawChar16(M,x,y);  break;    
-        case 'n': case 'N': drawChar16(N,x,y);  break;    
-        case 'o': case 'O': drawChar16(O,x,y);  break;    
-        case 'p': case 'P': drawChar16(P,x,y);  break;    
-        case 'q': case 'Q': drawChar16(Q,x,y);  break;    
-        case 'r': case 'R': drawChar16(R,x,y);  break;    
-        case 's': case 'S': drawChar16(S,x,y);  break;    
-        case 't': case 'T': drawChar16(T,x,y);  break;    
-        case 'u': case 'U': drawChar16(U,x,y);  break;    
-        case 'v': case 'V': drawChar16(V,x,y);  break;    
-        case 'w': case 'W': drawChar16(W,x,y);  break;    
-        case 'x': case 'X': drawChar16(X,x,y);  break;    
-        case 'y': case 'Y': drawChar16(Y,x,y);  break;    
-        case 'z': case 'Z': drawChar16(Z,x,y);  break;
-        case '.': drawChar16(point,x,y);    break;
-        case '/': drawChar16(slash,x,y);    break;      
-        default: break;
+        switch(c)
+        {
+            case '0': drawChar16(zero16,x,y);       break;
+            case '1': drawChar16(one16,x,y);        break;
+            case '2': drawChar16(two16,x,y);        break;
+            case '3': drawChar16(three16,x,y);      break;
+            case '4': drawChar16(four16,x,y);       break;
+            case '5': drawChar16(five16,x,y);       break;
+            case '6': drawChar16(six16,x,y);        break;
+            case '7': drawChar16(seven16,x,y);      break;
+            case '8': drawChar16(eight16,x,y);      break;
+            case '9': drawChar16(nine16,x,y);       break;
+            case 'a': case 'A': drawChar16(A16,x,y);  break;    
+            case 'b': case 'B': drawChar16(B16,x,y);  break;    
+            case 'c': case 'C': drawChar16(C16,x,y);  break;    
+            case 'd': case 'D': drawChar16(D16,x,y);  break;    
+            case 'e': case 'E': drawChar16(E16,x,y);  break;    
+            case 'f': case 'F': drawChar16(F16,x,y);  break;    
+            case 'g': case 'G': drawChar16(G16,x,y);  break;    
+            case 'h': case 'H': drawChar16(H16,x,y);  break;    
+            case 'i': case 'I': drawChar16(I16,x,y);  break;    
+            case 'j': case 'J': drawChar16(J16,x,y);  break;    
+            case 'k': case 'K': drawChar16(K16,x,y);  break;    
+            case 'l': case 'L': drawChar16(L16,x,y);  break;    
+            case 'm': case 'M': drawChar16(M16,x,y);  break;    
+            case 'n': case 'N': drawChar16(N16,x,y);  break;    
+            case 'o': case 'O': drawChar16(O16,x,y);  break;    
+            case 'p': case 'P': drawChar16(P16,x,y);  break;    
+            case 'q': case 'Q': drawChar16(Q16,x,y);  break;    
+            case 'r': case 'R': drawChar16(R16,x,y);  break;    
+            case 's': case 'S': drawChar16(S16,x,y);  break;    
+            case 't': case 'T': drawChar16(T16,x,y);  break;    
+            case 'u': case 'U': drawChar16(U16,x,y);  break;    
+            case 'v': case 'V': drawChar16(V16,x,y);  break;    
+            case 'w': case 'W': drawChar16(W16,x,y);  break;    
+            case 'x': case 'X': drawChar16(X16,x,y);  break;    
+            case 'y': case 'Y': drawChar16(Y16,x,y);  break;    
+            case 'z': case 'Z': drawChar16(Z16,x,y);  break;
+            case '.': drawChar16(point16,x,y);    break;
+            case '/': drawChar16(slash16,x,y);    break;      
+            default: break;
+        }
+    }
+    else if(t == 8)
+    {
+        switch(c)
+        {
+            case '0': drawChar8(zero8,x,y);       break;
+            case '1': drawChar8(one8,x,y);        break;
+            case '2': drawChar8(two8,x,y);        break;
+            case '3': drawChar8(three8,x,y);      break;
+            case '4': drawChar8(four8,x,y);       break;
+            case '5': drawChar8(five8,x,y);       break;
+            case '6': drawChar8(six8,x,y);        break;
+            case '7': drawChar8(seven8,x,y);      break;
+            case '8': drawChar8(eight8,x,y);      break;
+            case '9': drawChar8(nine8,x,y);       break;
+            case 'a': case 'A': drawChar8(A8,x,y);  break;    
+            case 'b': case 'B': drawChar8(B8,x,y);  break;    
+            case 'c': case 'C': drawChar8(C8,x,y);  break;    
+            case 'd': case 'D': drawChar8(D8,x,y);  break;    
+            case 'e': case 'E': drawChar8(E8,x,y);  break;    
+            case 'f': case 'F': drawChar8(F8,x,y);  break;    
+            case 'g': case 'G': drawChar8(G8,x,y);  break;    
+            case 'h': case 'H': drawChar8(H8,x,y);  break;    
+            case 'i': case 'I': drawChar8(I8,x,y);  break;    
+            case 'j': case 'J': drawChar8(J8,x,y);  break;    
+            case 'k': case 'K': drawChar8(K8,x,y);  break;    
+            case 'l': case 'L': drawChar8(L8,x,y);  break;    
+            case 'm': case 'M': drawChar8(M8,x,y);  break;    
+            case 'n': case 'N': drawChar8(N8,x,y);  break;    
+            case 'o': case 'O': drawChar8(O8,x,y);  break;    
+            case 'p': case 'P': drawChar8(P8,x,y);  break;    
+            case 'q': case 'Q': drawChar8(Q8,x,y);  break;    
+            case 'r': case 'R': drawChar8(R8,x,y);  break;    
+            case 's': case 'S': drawChar8(S8,x,y);  break;    
+            case 't': case 'T': drawChar8(T8,x,y);  break;    
+            case 'u': case 'U': drawChar8(U8,x,y);  break;    
+            case 'v': case 'V': drawChar8(V8,x,y);  break;    
+            case 'w': case 'W': drawChar8(W8,x,y);  break;    
+            case 'x': case 'X': drawChar8(X8,x,y);  break;    
+            case 'y': case 'Y': drawChar8(Y8,x,y);  break;    
+            case 'z': case 'Z': drawChar8(Z8,x,y);  break; 
+            default: break;
+        }
     }
 }
 
@@ -553,7 +553,7 @@ void drawInteger(int n, int x, int y, int t)
     }
 }
 
-void drawFloat(float n, int x, int y)
+void drawFloat(float n, int x, int y, int t)
 {
     int i;
     int j = 0;
@@ -570,21 +570,49 @@ void drawFloat(float n, int x, int y)
     }
     for(i = 0; i < 9; i++)
     {
-        drawCharFromString(digit[i],x+j,y);
+        drawCharFromString(digit[i],x+j,y,t);
         j += 12;
     }
 }
 
-void drawString(char s[], int x, int y, int t)
+// param w: wrap text
+void drawString(char s[], int x, int y, int t, bool w)
 {
     int i;
     int l = strlen(s);
-    if(l > 10)
-        l = 10;
+    
+    if(w == 0)
+    {
+        if(t == 16 && l > 10)
+        {
+            l = 10;
+        }
+        else if(t == 8 && l > 18)
+        {
+            l = 18;
+        }
+    }
     for(i = 0; i < l; i++)
     {
         drawCharFromString(s[i],x,y,t);
-        x = x + 12;
+        if(t == 16)
+        {
+            x += 12;
+            if(x > 118)
+            {
+                y++;
+                x = 0;
+            }
+        }
+        else if(t == 8)
+        {
+            x += 7;
+            if(x > 123)
+            {
+                y++;
+                x = 0;
+            }
+        }
     }
 }
 
@@ -649,13 +677,13 @@ void parseJSONTask(char *js)
 
 
     clearDisplay();
-    drawString(json_object_get_string(subject,"display"),0,0);
-    drawFloat(json_object_get_number(valueQuantity,"value"),0,2);
+    drawString(json_object_get_string(subject,"display"),0,0,16,1);
+    drawFloat(json_object_get_number(valueQuantity,"value"),0,2,16);
     // clear box for high or low value warning
     clearBox(115,2,127,3);
-    drawString(json_object_get_string(interpSystem,"code"),115,2);
-    drawString(json_object_get_string(valueQuantity,"code"),0,4);
-    drawString(json_object_get_string(system,"display"),0,6);
+    drawString(json_object_get_string(interpSystem,"code"),115,2,16,1);
+    drawString(json_object_get_string(valueQuantity,"code"),0,4,16,1);
+    drawString(json_object_get_string(system,"display"),0,6,16,1);
     display();
 
     vTaskDelete(NULL);
@@ -835,7 +863,9 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     clearDisplay();
-    drawFloat(12.3,0,0);
+    drawFloat(12.3,0,0,16);
+    drawString("abcedfghijklmnopqrstuvwxyz",0,3,8,1);
+    drawString("abcedfghijklmnopqrstuvwxyz",0,7,8,1);
     display();
 
     nvs_flash_init();
