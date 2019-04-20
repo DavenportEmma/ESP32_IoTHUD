@@ -17,7 +17,7 @@
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 #include "driver/i2c.h"
-#include "ascii.h"
+#include "font8px.h"
 #include "font16px.h"
 #include "sdkconfig.h"
 #include "mqtt_client.h"
@@ -493,7 +493,8 @@ void drawChar16(unsigned char c[10][2], int16_t x, int16_t y)
     }
 }
 
-void drawCharFromString(char c, int x, int y)
+// param t: type of font to be used, 8 or 16 px
+void drawCharFromString(char c, int x, int y, int t)
 {
     switch(c)
     {
@@ -539,7 +540,7 @@ void drawCharFromString(char c, int x, int y)
     }
 }
 
-void drawInteger(int n, int x, int y)
+void drawInteger(int n, int x, int y, int t)
 {
     int i;
     int j = 0;
@@ -547,7 +548,7 @@ void drawInteger(int n, int x, int y)
 	sprintf(digit,"%i",n);
     for(i = 0; i < 3; i++)
     {
-        drawCharFromString(digit[i],x+j,y);
+        drawCharFromString(digit[i],x+j,y,t);
         j += 12;
     }
 }
@@ -574,7 +575,7 @@ void drawFloat(float n, int x, int y)
     }
 }
 
-void drawString(char s[], int x, int y)
+void drawString(char s[], int x, int y, int t)
 {
     int i;
     int l = strlen(s);
@@ -582,10 +583,9 @@ void drawString(char s[], int x, int y)
         l = 10;
     for(i = 0; i < l; i++)
     {
-        drawCharFromString(s[i],x,y);
+        drawCharFromString(s[i],x,y,t);
         x = x + 12;
     }
-    //display();
 }
 
 /*
@@ -625,11 +625,16 @@ void parseJSONTask(char *js)
     codeObj = json_object_get_object(data,"code");
     codingArray = json_object_get_array(codeObj,"coding");
     system = json_array_get_object(codingArray,0);
-    printf("%s\n",json_object_get_string(system,"code"));
+    printf("%s : ",json_object_get_string(system,"code"));
+    // interpretation of loinc code
+    printf("%s\n",json_object_get_string(system,"display"));
 
     // measured value
     valueQuantity = json_object_get_object(data,"valueQuantity");
-    printf("%f\n",json_object_get_number(valueQuantity,"value"));
+    printf("%f ",json_object_get_number(valueQuantity,"value"));
+    // units of measured value
+    printf("%s\n",json_object_get_string(valueQuantity,"code"));
+
 
     // patient name
     subject = json_object_get_object(data,"subject");
@@ -644,11 +649,13 @@ void parseJSONTask(char *js)
 
 
     clearDisplay();
-    drawString(json_object_getp_string(subject,"display"),0,0);
+    drawString(json_object_get_string(subject,"display"),0,0);
     drawFloat(json_object_get_number(valueQuantity,"value"),0,2);
     // clear box for high or low value warning
     clearBox(115,2,127,3);
     drawString(json_object_get_string(interpSystem,"code"),115,2);
+    drawString(json_object_get_string(valueQuantity,"code"),0,4);
+    drawString(json_object_get_string(system,"display"),0,6);
     display();
 
     vTaskDelete(NULL);
