@@ -32,6 +32,16 @@ static int CONNECTED_BIT = BIT0;
 
 static char jsonString[1024 * 4] = "";
 
+int patientIndex = 0; 
+struct data {
+    bool valid;
+    char name[256];
+    float value;
+    char units;
+    char reference[256];
+    char description[256];
+} patient[3];
+
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
 
@@ -610,7 +620,7 @@ void drawString(char s[], int x, int y, int t, bool w)
         }
         else if(t == 8)
         {
-            x += 7;
+            x += 6;
             if(x > 123)
             {
                 y++;
@@ -643,6 +653,54 @@ void drawString(char s[], int x, int y, int t, bool w)
             |
             |   MSB
 */
+
+void initStruct()
+{
+    int i;
+    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    for(i = 0; i < 3; i++)
+    {
+        patient[i].valid = 0;
+    }
+    xSemaphoreGive(xSemaphore);
+}
+
+void printPatientData(int p)
+{
+    //clearDisplay();
+    //drawString(patient[p].name,0,0,8,0);
+    //drawFloat(patient[p].value,0,1,16);
+    // clear box for high or low value warning
+    //clearBox(115,1,127,2);
+    //drawString(patient[p].reference,115,1,16,0);
+    //drawString(patient[p].units,0,3,16,0);
+    //drawString(patient[p].description,0,6,8,1);
+    display();
+}
+
+void displayPatientDataTask()
+{
+    int i;
+    while(1)
+    {   
+        xSemaphoreTake(xSemaphore,portMAX_DELAY);
+        for(i = 0; i < 3; i++)
+        {
+            if(patient[i].valid)
+            {
+                printPatientData(i);
+            }
+            else
+            {
+                break;
+            }
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+        }
+        xSemaphoreGive(xSemaphore);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+}
 
 void parseJSONTask(char *js)
 {
@@ -679,8 +737,12 @@ void parseJSONTask(char *js)
     interpSystem = json_array_get_object(interpCodingArray,0);
     printf("%s\n",json_object_get_string(interpSystem,"code"));
 
-
-    clearDisplay();
+    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    patient[0].valid = 1;
+    patient[0].value = 12.5;
+    patient[1].valid = 1;
+    patient[1].value = 14.2;
+    /*clearDisplay();
     drawString(json_object_get_string(subject,"display"),0,0,8,0);
     drawFloat(json_object_get_number(valueQuantity,"value"),0,1,16);
     // clear box for high or low value warning
@@ -688,7 +750,8 @@ void parseJSONTask(char *js)
     drawString(json_object_get_string(interpSystem,"code"),115,1,16,0);
     drawString(json_object_get_string(valueQuantity,"code"),0,3,16,0);
     drawString(json_object_get_string(system,"display"),0,6,8,1);
-    display();
+    display();*/
+    xSemaphoreGive(xSemaphore);
 
     vTaskDelete(NULL);
 }
@@ -852,6 +915,7 @@ void app_main() // vTaskStartScheduler is created here
 {
     // create mutex, returns handle
     xSemaphore = xSemaphoreCreateMutex();
+    initStruct();
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
@@ -866,17 +930,18 @@ void app_main() // vTaskStartScheduler is created here
 
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
-    clearDisplay();
-    drawFloat(12.3,0,0,16);
-    drawString("abcedfghijklmnopqrstuvwxyz",0,3,8,1);
-    drawString("abcedfghijklmnopqrstuvwxyz",0,7,8,1);
-    display();
+    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+        clearDisplay();
+        drawString("HUD",0,0,16,0);
+        drawString("C15444808",0,2,8,0);
+        display();
+    xSemaphoreGive(xSemaphore);
 
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
 
-
+    xTaskCreate(&displayPatientDataTask, "display patient data task", (1024 * 8), NULL, 5, NULL);
     while(1)
     {
         vTaskDelay(500 / portTICK_PERIOD_MS);
