@@ -34,6 +34,7 @@ static char jsonString[1024 * 4] = "";
 
 int patientIndex = 0; 
 struct data {
+    int lru;
     bool valid;
     char loinc[32];
     char name[256];
@@ -669,6 +670,7 @@ void initData()
     for(i = 0; i < 3; i++)
     {
         patient[i].valid = 0;
+        patient[i].lru = i;
     }
     xSemaphoreGive(xSemaphore);
 }
@@ -701,6 +703,7 @@ void displayPatientDataTask(void *arg)
             }
             vTaskDelay(2000 / portTICK_PERIOD_MS);
         }
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -788,8 +791,9 @@ void parseJSONTask(char *js)
         // new patient
         else
         {
+            patientIndex = 0;
             // overwrite first element as this is a new patient
-            copyDataToPatient(0, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+            copyDataToPatient(patientIndex, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
             // invalidate the other two elements
             patient[1].valid = 0;
             patient[2].valid = 0;
