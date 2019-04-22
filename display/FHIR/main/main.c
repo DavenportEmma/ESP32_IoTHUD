@@ -132,10 +132,9 @@ esp_err_t i2c_master_write_slave(i2c_port_t i2c_num, uint8_t *data_wr, size_t si
     // master sends queued commands
     // i2c_num - i2c port number
     // portTICK_RATE_MS - maximum wait ticks. If the queue is full for that amount of ticks, the call aborts instead of waiting longer
-    esp_err_t ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+    i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
     // free i2c command link
     i2c_cmd_link_delete(cmd);
-    return ret;
 }
 
 // initiates master
@@ -200,9 +199,10 @@ void command(uint8_t c)
     // i2c_num - i2c port number
     // portTICK_RATE_MS - maximum wait ticks. If the queue is full for that amount of ticks, the call aborts instead of waiting longer
     esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+    if(ret != 0)
+        return;
     // free i2c command link
     i2c_cmd_link_delete(cmd);
-    return ret;
 }
 
 // clears the display
@@ -293,6 +293,7 @@ void display()
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     // begin tx
     i2c_master_start(cmd);
+ 
     // configure display to receive data
     i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
     i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
@@ -306,9 +307,11 @@ void display()
     		i2c_master_stop(cmd);
             // begin the tx
     		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+            if(ret != 0)
+                return;
             // delete link
             i2c_cmd_link_delete(cmd);
-    		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    		cmd = i2c_cmd_link_create();
             i2c_master_start(cmd);
     		i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
     		i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
@@ -321,6 +324,8 @@ void display()
     // finish tx
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+    if(ret != 0)
+        return;
     i2c_cmd_link_delete(cmd);
 }
 
@@ -654,7 +659,7 @@ void drawString(char s[], int x, int y, int t, bool w)
             |   MSB
 */
 
-void initStruct()
+void initData()
 {
     int i;
     xSemaphoreTake(xSemaphore,portMAX_DELAY);
@@ -670,11 +675,10 @@ void displayPatientDataTask(void *arg)
     int i;
     while(1)
     {   
-        
         for(i = 0; i < 3; i++)
         {
             xSemaphoreTake(xSemaphore,portMAX_DELAY);
-            /*if(patient[i].valid)
+            if(patient[i].valid == 1)
             {
                 clearDisplay();
                 drawString(patient[i].name,0,0,8,0);
@@ -684,24 +688,16 @@ void displayPatientDataTask(void *arg)
                 drawString(patient[i].reference,115,1,16,0);
                 drawString(patient[i].units,0,3,16,0);
                 drawString(patient[i].description,0,6,8,1);
+                display();
+                xSemaphoreGive(xSemaphore);
             }
             else
             {
+                xSemaphoreGive(xSemaphore);
                 break;
-            }*/
-            clearDisplay();
-            drawString(patient[0].name,0,0,8,0);
-            drawFloat(patient[0].value,0,1,16);
-            // clear box for high or low value warning
-            clearBox(115,1,127,2);
-            drawString(patient[0].reference,115,1,16,0);
-            drawString(patient[0].units,0,3,16,0);
-            drawString(patient[0].description,0,6,8,1);
-            display();
-            xSemaphoreGive(xSemaphore);
+            }
             vTaskDelay(2000 / portTICK_PERIOD_MS);
         }
-        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -711,6 +707,7 @@ void parseJSONTask(char *js)
     JSON_Value *root_value;
     JSON_Object *data, *codeObj, *system, *subject, *valueQuantity, *interpCodingObj, *interpSystem;
     JSON_Array *codingArray, *interp, *interpCodingArray;
+
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
     if(data == NULL)
@@ -742,28 +739,23 @@ void parseJSONTask(char *js)
     printf("%s\n",json_object_get_string(interpSystem,"code"));
 
     xSemaphoreTake(xSemaphore,portMAX_DELAY);
-        /*patient[0].valid = 1;
-        strcpy(patient[0].name,json_object_get_string(subject,"display"));
+        patient[0].valid = 1;
+        strcpy(patient[0].name,
+                json_object_get_string(subject,"display"));
         patient[0].value = json_object_get_number(valueQuantity,"value");
-        strcpy(patient[0].units,json_object_get_string(valueQuantity,"code"));
-        strcpy(patient[0].reference,json_object_get_string(interpSystem,"code"));
-        strcpy(patient[0].description,json_object_get_string(system,"display"));
+        strcpy(patient[0].units,
+                json_object_get_string(valueQuantity,"code"));
+        strcpy(patient[0].reference,
+                json_object_get_string(interpSystem,"code"));
+        strcpy(patient[0].description,
+                json_object_get_string(system,"display"));
 
         patient[1].valid = 1;
         strcpy(patient[1].name,"John Patient");
-        patient[1].value = 14.2;
-        strcpy(patient[1].units,"g/l");
-        strcpy(patient[1].reference,"H");
-        strcpy(patient[1].description,"grams per litre");*/
-        clearDisplay();
-        drawString(json_object_get_string(subject,"display"),0,0,8,0);
-        drawFloat(json_object_get_number(valueQuantity,"value"),0,1,16);
-        // clear box for high or low value warning
-        clearBox(115,1,127,2);
-        drawString(json_object_get_string(interpSystem,"code"),115,1,16,0);
-        drawString(json_object_get_string(valueQuantity,"code"),0,3,16,0);
-        drawString(json_object_get_string(system,"display"),0,6,8,1);
-        display();
+        patient[1].value = 10.23;
+        strcpy(patient[1].units,"UNITS");
+        strcpy(patient[1].reference,"N");
+        strcpy(patient[1].description,"test description. hello world");
     xSemaphoreGive(xSemaphore);
 
     vTaskDelete(NULL);
@@ -943,12 +935,15 @@ void app_main() // vTaskStartScheduler is created here
     ESP_ERROR_CHECK(i2c_master_init());
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
+    clearDisplay();
+    display();
+
     nvs_flash_init();
     wifi_init();
     mqtt_app_start();
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //xTaskCreate(&displayPatientDataTask, "display patient data task", (1024 * 8), NULL, 5, NULL);
+    xTaskCreate(&displayPatientDataTask, "display patient data task", (1024 * 4), NULL, 5, NULL);
 
     while(1)
     {
