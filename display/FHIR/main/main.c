@@ -132,9 +132,10 @@ esp_err_t i2c_master_write_slave(i2c_port_t i2c_num, uint8_t *data_wr, size_t si
     // master sends queued commands
     // i2c_num - i2c port number
     // portTICK_RATE_MS - maximum wait ticks. If the queue is full for that amount of ticks, the call aborts instead of waiting longer
-    i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+    esp_err_t ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
     // free i2c command link
     i2c_cmd_link_delete(cmd);
+    return ret;
 }
 
 // initiates master
@@ -298,6 +299,7 @@ void display()
     i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
     i2c_master_write_byte(cmd, 0x40, ACK_CHECK_EN);
     uint8_t bytesOut = 1;
+    esp_err_t ret;
     while(count--)
     {
         // if outgoing buffer is full
@@ -306,7 +308,7 @@ void display()
             // stop bit
     		i2c_master_stop(cmd);
             // begin the tx
-    		esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+    		ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
             if(ret != 0)
                 return;
             // delete link
@@ -323,7 +325,7 @@ void display()
     }
     // finish tx
     i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
+    ret = i2c_master_cmd_begin(I2C_NUM_1, cmd, 1000 / portTICK_RATE_MS);
     if(ret != 0)
         return;
     i2c_cmd_link_delete(cmd);
@@ -702,60 +704,85 @@ void displayPatientDataTask(void *arg)
     vTaskDelete(NULL);
 }
 
+void copyDataToPatient(int in, char* c, float v, char* u, char* n, char* r)
+{
+    strcpy(patient[in].name,n);
+    patient[in].value = v;
+    strcpy(patient[in].units,u);
+    strcpy(patient[in].reference,r);
+    strcpy(patient[in].description, c);
+    patient[in].valid = 1;
+    patientIndex++;
+}
+
 void parseJSONTask(char *js)
 {
     JSON_Value *root_value;
     JSON_Object *data, *codeObj, *system, *subject, *valueQuantity, *interpCodingObj, *interpSystem;
     JSON_Array *codingArray, *interp, *interpCodingArray;
+    
+    char msgLoincCodeInterp[256];
+    float msgValue;
+    char msgUnits[32];
+    char msgName[128];
+    char msgRef[8];
 
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
     if(data == NULL)
         vTaskDelete(NULL);
 
+    // loinc code
     codeObj = json_object_get_object(data,"code");
     codingArray = json_object_get_array(codeObj,"coding");
     system = json_array_get_object(codingArray,0);
     printf("%s : ",json_object_get_string(system,"code"));
     // interpretation of loinc code
-    printf("%s\n",json_object_get_string(system,"display"));
+    strcpy(msgLoincCodeInterp,json_object_get_string(system,"display"));
 
     // measured value
     valueQuantity = json_object_get_object(data,"valueQuantity");
-    printf("%f ",json_object_get_number(valueQuantity,"value"));
+    msgValue = json_object_get_number(valueQuantity,"value");
     // units of measured value
-    printf("%s\n",json_object_get_string(valueQuantity,"code"));
-
+    strcpy(msgUnits,json_object_get_string(valueQuantity,"code"));
 
     // patient name
     subject = json_object_get_object(data,"subject");
-    printf("%s\n",json_object_get_string(subject,"display"));
+    strcpy(msgName,json_object_get_string(subject,"display"));
 
     // high or low value warning
     interp = json_object_get_array(data,"interpretation");
     interpCodingObj = json_array_get_object(interp,0);
     interpCodingArray = json_object_get_array(interpCodingObj,"coding");
     interpSystem = json_array_get_object(interpCodingArray,0);
-    printf("%s\n",json_object_get_string(interpSystem,"code"));
+    strcpy(msgRef,json_object_get_string(interpSystem,"code"));
 
     xSemaphoreTake(xSemaphore,portMAX_DELAY);
-        patient[0].valid = 1;
-        strcpy(patient[0].name,
-                json_object_get_string(subject,"display"));
-        patient[0].value = json_object_get_number(valueQuantity,"value");
-        strcpy(patient[0].units,
-                json_object_get_string(valueQuantity,"code"));
-        strcpy(patient[0].reference,
-                json_object_get_string(interpSystem,"code"));
-        strcpy(patient[0].description,
-                json_object_get_string(system,"display"));
-
-        patient[1].valid = 1;
-        strcpy(patient[1].name,"John Patient");
-        patient[1].value = 10.23;
-        strcpy(patient[1].units,"UNITS");
-        strcpy(patient[1].reference,"N");
-        strcpy(patient[1].description,"test description. hello world");
+        // if the name in the new message is equal to
+        // the name of the current data ie. new data
+        // is data of the current patient
+        if(strcmp(patient[0].name,msgName) == 0)
+        {
+            // if the patient data structure is full
+            if(patientIndex >= 3)
+            {
+                // overwrite the first element as it is the oldest
+                // fifo
+                patientIndex = 0;
+            }
+            copyDataToPatient(patientIndex, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+        }
+        // if the message contains data of a
+        // new patient
+        else
+        {
+            // overwrite first element as this is a new patient
+            copyDataToPatient(0, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+            // invalidate the other two elements
+            patient[1].valid = 0;
+            patient[2].valid = 0;
+        }
+        
     xSemaphoreGive(xSemaphore);
 
     vTaskDelete(NULL);
