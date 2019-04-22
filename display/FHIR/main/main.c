@@ -35,6 +35,7 @@ static char jsonString[1024 * 4] = "";
 int patientIndex = 0; 
 struct data {
     bool valid;
+    char loinc[32];
     char name[256];
     float value;
     char units[256];
@@ -703,10 +704,19 @@ void displayPatientDataTask(void *arg)
     }
     vTaskDelete(NULL);
 }
-
-void copyDataToPatient(int in, char* c, float v, char* u, char* n, char* r)
+/*
+    in  index
+    lc  loinc code
+    c   loinc code interpretation
+    v   value
+    u   units
+    n   name
+    r   reference
+*/
+void copyDataToPatient(int in, char* lc, char* c, float v, char* u, char* n, char* r)
 {
     strcpy(patient[in].name,n);
+    strcpy(patient[in].loinc,lc);
     patient[in].value = v;
     strcpy(patient[in].units,u);
     strcpy(patient[in].reference,r);
@@ -721,6 +731,7 @@ void parseJSONTask(char *js)
     JSON_Object *data, *codeObj, *system, *subject, *valueQuantity, *interpCodingObj, *interpSystem;
     JSON_Array *codingArray, *interp, *interpCodingArray;
     
+    char msgLoincCode[32];
     char msgLoincCodeInterp[256];
     float msgValue;
     char msgUnits[32];
@@ -736,7 +747,7 @@ void parseJSONTask(char *js)
     codeObj = json_object_get_object(data,"code");
     codingArray = json_object_get_array(codeObj,"coding");
     system = json_array_get_object(codingArray,0);
-    printf("%s : ",json_object_get_string(system,"code"));
+    strcpy(msgLoincCode,json_object_get_string(system,"code"));
     // interpretation of loinc code
     strcpy(msgLoincCodeInterp,json_object_get_string(system,"display"));
 
@@ -763,6 +774,7 @@ void parseJSONTask(char *js)
         // is data of the current patient
         if(strcmp(patient[0].name,msgName) == 0)
         {
+
             // if the patient data structure is full
             if(patientIndex >= 3)
             {
@@ -770,14 +782,14 @@ void parseJSONTask(char *js)
                 // fifo
                 patientIndex = 0;
             }
-            copyDataToPatient(patientIndex, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+            copyDataToPatient(patientIndex, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
         }
         // if the message contains data of a
         // new patient
         else
         {
             // overwrite first element as this is a new patient
-            copyDataToPatient(0, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+            copyDataToPatient(0, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
             // invalidate the other two elements
             patient[1].valid = 0;
             patient[2].valid = 0;
