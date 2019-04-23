@@ -695,19 +695,18 @@ void displayPatientDataTask(void *arg)
                 drawString(patient[i].description,0,6,8,1);
                 display();
                 xSemaphoreGive(xSemaphore);
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
             }
             else
             {
                 xSemaphoreGive(xSemaphore);
-                break;
             }
-            vTaskDelay(2000 / portTICK_PERIOD_MS);
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
-/*
+/*  writes data to patient element in
     in  index
     lc  loinc code
     c   loinc code interpretation
@@ -718,6 +717,7 @@ void displayPatientDataTask(void *arg)
 */
 void copyDataToPatient(int in, char* lc, char* c, float v, char* u, char* n, char* r)
 {
+    printf("copy data\n");
     strcpy(patient[in].name,n);
     strcpy(patient[in].loinc,lc);
     patient[in].value = v;
@@ -725,7 +725,24 @@ void copyDataToPatient(int in, char* lc, char* c, float v, char* u, char* n, cha
     strcpy(patient[in].reference,r);
     strcpy(patient[in].description, c);
     patient[in].valid = 1;
-    patientIndex++;
+}
+
+// recalculates least recently used flags
+// m is most recently use element
+void modifyLRU(int m)
+{
+    int k;
+    printf("modify lru\n");
+    patient[m].lru = -1;
+
+    for(k = 0; k < 3; k++)
+    {
+        patient[k].lru = patient[k].lru + 1;
+        if(patient[k].lru > 2)
+        {
+            patient[k].lru = 2;
+        }
+    }
 }
 
 void parseJSONTask(char *js)
@@ -771,36 +788,94 @@ void parseJSONTask(char *js)
     interpSystem = json_array_get_object(interpCodingArray,0);
     strcpy(msgRef,json_object_get_string(interpSystem,"code"));
 
+    printf("LOINC:\t%s\nInterp:\t%s\nValue:\t%f\nUnits:\t%s\nName:\t%s\nRef:\t%s\n"
+    ,msgLoincCode,msgLoincCodeInterp,msgValue,msgUnits,msgName,msgRef);
+
     xSemaphoreTake(xSemaphore,portMAX_DELAY);
         // if the name in the new message is equal to
         // the name of the current data ie. new data
         // is data of the current patient
         if(strcmp(patient[0].name,msgName) == 0)
         {
-
-            // if the patient data structure is full
-            if(patientIndex >= 3)
+            int i;
+            int loincEq = 0;
+            printf("existing patient\n");
+            for(i = 0; i < 3; i++)
             {
-                // overwrite the first element as it is the oldest
-                // fifo
-                patientIndex = 0;
+                // if the data is just updating an existing entry
+                if(strcmp(msgLoincCode,patient[i].loinc) == 0)
+                {
+                    printf("data update\n");
+                    loincEq = 1;
+                    break;
+                }
             }
-            copyDataToPatient(patientIndex, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+            // data is an update for existing element
+            if(loincEq == 1)
+            {
+                copyDataToPatient(i, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+                // if the updated data was already the most recently used
+                if(patient[i].lru == 0){}
+                else
+                {
+                    // recalculate least recently used flags
+                    modifyLRU(i);
+                }
+                
+            }
+            // if the data is new but still for the same patient
+            else if(loincEq == 0)
+            {
+                int x;
+                // find least recently used element
+                for(x = 0; x < 3; x++)
+                {
+                    if(patient[x].lru >= 2)
+                    {   
+                        copyDataToPatient(x, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+                        modifyLRU(x);
+                        break;
+                    }
+                }               
+            }
         }
         // if the message contains data of a
         // new patient
         else
         {
-            patientIndex = 0;
-            // overwrite first element as this is a new patient
-            copyDataToPatient(patientIndex, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
-            // invalidate the other two elements
-            patient[1].valid = 0;
-            patient[2].valid = 0;
+            int z;
+            int j;
+            printf("new patient\n");
+            for(j = 0; j < 3; j++)
+            {
+                // fill the name of each element to the name
+                // of the new patient
+                strcpy(patient[j].name,msgName);
+                printf("patient name %s\n",patient[j].name);
+                // invalidate all entries as they now
+                // contain stale data
+                patient[j].valid = 0;
+            }
+            
+            // find least recently used element
+            for(z = 0; z < 3; z++)
+            {
+                printf("element %i\tlru = %i\n",z,patient[z].lru);
+                if(patient[z].lru >= 2)
+                {   
+                    printf("%i\n",z);
+                    // write new data
+                    // elements are validated within this function
+                    copyDataToPatient(z, msgLoincCode, msgLoincCodeInterp, msgValue, msgUnits, msgName, msgRef);
+                    printf("copy complete\n");
+                    // recalculate LRU flags
+                    modifyLRU(z);
+                    printf("LRUs recalculated\n");
+                    break;
+                }
+            } 
         }
-        
     xSemaphoreGive(xSemaphore);
-
     vTaskDelete(NULL);
 }
 
@@ -963,6 +1038,7 @@ void app_main() // vTaskStartScheduler is created here
 {
     // create mutex, returns handle
     xSemaphore = xSemaphoreCreateMutex();
+    initData();
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
