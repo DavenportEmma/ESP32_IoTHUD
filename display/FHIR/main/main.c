@@ -23,6 +23,7 @@
 #include "mqtt_client.h"
 #include "../parson/parson.h"
 #include "../parson/parson.c"
+#include "driver/gpio.h"    // led driver
 
 static const char *TAG = "MQTTWS_I2C_DISPLAY";
 
@@ -891,12 +892,6 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             msg_id = esp_mqtt_client_subscribe(client, "/topic/conor0", 0);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/conor1", 1);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_unsubscribe(client, "/topic/conor1");
-            ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -926,6 +921,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
+            msg_id = esp_mqtt_client_publish(client, "/topic/conor1", "received data", 0, 0, 0);
             strncpy(jsonString, event->data, event->data_len);
             jsonString[event->data_len] = '\0';
             xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8),  (void *)jsonString, 5, NULL);
@@ -1039,6 +1035,7 @@ void app_main() // vTaskStartScheduler is created here
     // create mutex, returns handle
     xSemaphore = xSemaphoreCreateMutex();
     initData();
+
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
@@ -1055,6 +1052,7 @@ void app_main() // vTaskStartScheduler is created here
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
     clearDisplay();
+    drawString("starting",0,0,16,0);
     display();
 
     nvs_flash_init();
