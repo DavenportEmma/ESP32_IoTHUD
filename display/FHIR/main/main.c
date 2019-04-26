@@ -343,22 +343,6 @@ void drawPixel(int16_t x, int16_t y, uint16_t colour)
 {
 	if((x >= 0) && (x < WIDTH && (y >= 0) && (y < HEIGHT))) 
 	{
-	    // Pixel is in-bounds. Rotate coordinates if needed.
-	    switch(rotation) 
-	    {
-	    	case 1:
-	    		ssd1306_swap(x, y);
-	    		x = WIDTH - x - 1;
-	    		break;
-	    	case 2:
-	    		x = WIDTH  - x - 1;
-	    		y = HEIGHT - y - 1;
-	    		break;
-	    	case 3:
-	    		ssd1306_swap(x, y);
-	    		y = HEIGHT - y - 1;
-	    		break;
-	    }
 	    switch(colour) 
 	    {
 	    	case WHITE:   buffer[x + (y/8)*WIDTH] |=  (1 << (y&7)); break;
