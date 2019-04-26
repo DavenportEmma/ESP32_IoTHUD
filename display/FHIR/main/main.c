@@ -172,6 +172,7 @@ esp_err_t i2c_master_init()
                               I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
+
 // send a single command to the display
 void command(uint8_t c)
 {
@@ -184,11 +185,11 @@ void command(uint8_t c)
     i2c_master_write_byte(cmd, (SSD1306_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
     // queue command for master to write buffer to i2c bus
     // 0x00 - after the slave address is written to the bus the control byte must follow
-    /*
-	| 7 bit			| 1 bit	||				|			|
-	| slave address | R/W#	|| control byte | data byte | ...
-	|				|		|| Co | D/C#	|			|
-    */
+    
+	//| 7 bit			| 1 bit	||				|			|
+	//| slave address   | R/W#	|| control byte | data byte | ...
+	//|				    |		|| Co | D/C#	|			|
+    
     // Co - continuation bit. 0 = transmission of the following information
     // will contain data bytes only
     // D/C# - data/command selection bit. determines the next data byte is
@@ -213,14 +214,16 @@ void command(uint8_t c)
 void clearDisplay()
 {
     // sets the entire buffer to 0
-    memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
+    //memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
+    memset(buffer, 0, WIDTH * (HEIGHT / 8));
 }
 
 // fills the display with white
 void fillDisplay()
 {
     // sets the entire buffer to 0xFF
-    memset(buffer, 0xFF, WIDTH * ((HEIGHT + 7) / 8));
+    //memset(buffer, 0xFF, WIDTH * ((HEIGHT + 7) / 8));
+    memset(buffer, 0xFF, WIDTH * (HEIGHT / 8));
 }
 
 // clears a rectangle of the screen to black
@@ -240,7 +243,8 @@ void clearBox(int x1, int y1, int x2, int y2)
 void begin(uint8_t vcs, uint8_t addr) 
 {
     // allocate memory to buffer
-    buffer = (uint8_t*) pvPortMalloc(WIDTH * ((HEIGHT + 7) / 8));
+    //buffer = (uint8_t*) pvPortMalloc(WIDTH * ((HEIGHT + 7) / 8));
+    buffer = (uint8_t*) pvPortMalloc(WIDTH * (HEIGHT / 8));
 
 	clearDisplay();
 	vccstate = vcs;
@@ -291,7 +295,8 @@ void display()
 	command(SSD1306_COLUMNADDR);
 	command(0);
 	command(WIDTH - 1);
-	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
+	//uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
+    uint16_t count = WIDTH * (HEIGHT / 8);
 	uint8_t *ptr   = buffer;
     // create i2c link
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
