@@ -48,7 +48,9 @@ function subscribeCallback()
 
 function messageCallback(topic, message, packet)
 {
-	client.publish('/topic/conor0',message,publishCallback);
+	//client.publish('/topic/conor0',message,publishCallback);
+	console.log(message);
+	
 }
 
 function publishCallback()
