@@ -27,8 +27,28 @@ r1.on('line', lineCallback);
 function lineCallback(line)
 {
 	var filePath = '../FHIR_examples/' + line + '.json';
-	var content = fs.readFileSync(filePath);
-	var jsonContent = JSON.parse(content);
+	var content;
+	// attempt to read file, return error if file doesn't exist
+	try
+	{
+		content = fs.readFileSync(filePath);
+	}
+	catch(e)
+	{
+		return console.error(e);
+	}
+
+	var jsonContent;
+	// attempt to parse json file, return error if parse failed
+	try
+	{
+		jsonContent = JSON.parse(content);	
+	}
+	catch(e)
+	{
+		return console.error(e);
+	}
+
 	delete jsonContent.text;
 	console.log(jsonContent);
 	var newJSON = JSON.stringify(jsonContent);
