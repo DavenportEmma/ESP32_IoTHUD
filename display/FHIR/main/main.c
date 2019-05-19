@@ -980,10 +980,10 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = "VM0196906",
-            .password = "8w2knZfjpdyb",
-            //.ssid = "Conor's phone",
-            //.password = "password12345",
+            //.ssid = "VM0196906",
+            //.password = "8w2knZfjpdyb",
+            .ssid = "Conor's phone",
+            .password = "headsupdisplay"
         },
     };
     // set operating mode set to station
