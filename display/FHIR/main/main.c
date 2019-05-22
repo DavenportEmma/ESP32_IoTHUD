@@ -1,3 +1,8 @@
+/*
+Final Year Project - IoT HUD
+Conor Davenport - C15444808
+Last Modified: 22 May 2018
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -17,54 +22,53 @@
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 #include "driver/i2c.h"
-#include "font8px.h"
-#include "font16px.h"
+#include "font8px.h"    // small font
+#include "font16px.h"   // large font
 #include "sdkconfig.h"
 #include "mqtt_client.h"
-#include "../parson/parson.h"
-#include "../parson/parson.c"
+#include "../parson/parson.h"   // json parser
+#include "../parson/parson.c"   // json parser
 #include "driver/gpio.h"    // led driver
 
-static const char *TAG = "MQTTWS_I2C_DISPLAY";
+static const char *TAG = "MQTTWS_I2C_DISPLAY";  // project tag
 
-static EventGroupHandle_t wifi_event_group;
-static SemaphoreHandle_t xSemaphore = NULL;
-static int CONNECTED_BIT = BIT0;
+static EventGroupHandle_t wifi_event_group; // event bits indicate if an event has occured
+static SemaphoreHandle_t xSemaphore = NULL; // semaphore handle
+static int CONNECTED_BIT = BIT0;    // connected bit for wifi event group
 
-static char jsonString[1024 * 4] = "";
+static char jsonString[1024 * 4] = "";  // empty string for incoming fhir message
 
-int patientIndex = 0; 
-struct data {
-    int lru;
-    bool valid;
-    char loinc[32];
-    char name[256];
-    float value;
-    char units[256];
-    char reference[256];
-    char description[256];
-} patient[3];
+struct data {   // patient data structure filled from fhir message
+    int lru;    // least recently used
+    bool valid; // data valid bit
+    char loinc[32]; // holds loinc code
+    char name[256]; // patient name
+    float value;    // observation value
+    char units[256];    // units of observation
+    char reference[256];    // high or low reference warning
+    char description[256];  // english description of loinc code
+} patient[3];   // create an array of 3 patient data
 
-#define _I2C_NUMBER(num) I2C_NUM_##num
+#define _I2C_NUMBER(num) I2C_NUM_##num  // slave address
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
 
-#define DATA_LENGTH 512                  /*!< Data buffer length of test buffer */
-#define RW_TEST_LENGTH 128               /*!< Data length for r/w test, [0,DATA_LENGTH] */
-#define DELAY_TIME_BETWEEN_ITEMS_MS 1000 /*!< delay time between different test items */
+#define DATA_LENGTH 512                  // Data buffer length of test buffer
+#define RW_TEST_LENGTH 128               // Data length for r/w test, [0,DATA_LENGTH]
+#define DELAY_TIME_BETWEEN_ITEMS_MS 1000 // delay time between different test items
 
-#define I2C_MASTER_SCL_IO CONFIG_I2C_MASTER_SCL               /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO CONFIG_I2C_MASTER_SDA               /*!< gpio number for I2C master data  */
-#define I2C_MASTER_NUM I2C_NUMBER(CONFIG_I2C_MASTER_PORT_NUM) /*!< I2C port number for master dev */
-#define I2C_MASTER_FREQ_HZ CONFIG_I2C_MASTER_FREQUENCY        /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
-#define WIRE_MAX 32
+#define I2C_MASTER_SCL_IO CONFIG_I2C_MASTER_SCL               // gpio number for I2C master clock
+#define I2C_MASTER_SDA_IO CONFIG_I2C_MASTER_SDA               // gpio number for I2C master data 
+#define I2C_MASTER_NUM I2C_NUMBER(CONFIG_I2C_MASTER_PORT_NUM) // I2C port number for master dev
+#define I2C_MASTER_FREQ_HZ CONFIG_I2C_MASTER_FREQUENCY        // I2C master clock frequency
+#define I2C_MASTER_TX_BUF_DISABLE 0                           // I2C master doesn't need buffer
+#define I2C_MASTER_RX_BUF_DISABLE 0                           // I2C master doesn't need buffer
+#define WIRE_MAX 32 // max output write bytes
 #define WRITE_BIT 0
-#define ACK_CHECK_EN 0x1                        /*!< I2C master will check ack from slave*/
+#define ACK_CHECK_EN 0x1                        //I2C master will check ack from slave
 #define ACK_CHECK_DIS 0x0 
 
 #define ssd1306_swap(a, b) \
-  (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b))) ///< No-temp-var swap operation
+  (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b))) // no temporary vaiable swap operation
 
 #define SSD1306_ADDR 0x3C	// i2c address of display module
 #define HEIGHT 64			// 128 x 64 px display
@@ -576,8 +580,8 @@ void drawInteger(int n, int x, int y, int t)
     int i;
     int j = 0;
 	char digit[3];
-	sprintf(digit,"%i",n);
-    for(i = 0; i < 3; i++)
+	sprintf(digit,"%i",n);  // convert int to string
+    for(i = 0; i < 3; i++)  // draw characters from string
     {
         drawCharFromString(digit[i],x+j,y,t);
         j += 12;
@@ -589,9 +593,8 @@ void drawFloat(float n, int x, int y, int t)
     int i;
     int j = 0;
     char digit[9];
-    sprintf(digit,"%f",n);
-    //remove trailing zeros
-    for(i = 8; i > 0; i--)
+    sprintf(digit,"%f",n);  // convert float to string
+    for(i = 8; i > 0; i--)  //remove trailing zeros
     {
         if(digit[i] == '0' || digit[i] == '\0')
 			digit[i] = '\0';
@@ -599,7 +602,7 @@ void drawFloat(float n, int x, int y, int t)
 		else
 			break;
     }
-    for(i = 0; i < 9; i++)
+    for(i = 0; i < 9; i++)  // draw characters from string
     {
         drawCharFromString(digit[i],x+j,y,t);
         j += 12;
@@ -610,20 +613,20 @@ void drawFloat(float n, int x, int y, int t)
 void drawString(char s[], int x, int y, int t, bool w)
 {
     int i;
-    int l = strlen(s);
+    int l = strlen(s);  // kength of string
     
-    if(w == 0)
+    if(w == 0)  // if there is no text wrap
     {
-        if(t == 16 && l > 10)
+        if(t == 16 && l > 10)   // truncate string
         {
-            l = 10;
+            l = 10; // 10 16px characters can fit on one line
         }
-        else if(t == 8 && l > 18)
+        else if(t == 8 && l > 18)   // truncate string
         {
-            l = 18;
+            l = 18; // 18 8px characters can fit on one line
         }
     }
-    for(i = 0; i < l; i++)
+    for(i = 0; i < l; i++)  // draw characters
     {
         drawCharFromString(s[i],x,y,t);
         if(t == 16)
@@ -671,48 +674,47 @@ void drawString(char s[], int x, int y, int t, bool w)
             |   MSB
 */
 
-void initData()
+void initData() // initialise patient data struct array
 {
     int i;
-    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    xSemaphoreTake(xSemaphore,portMAX_DELAY);   // reserve resource, no timeout for access
     for(i = 0; i < 3; i++)
     {
-        patient[i].valid = 0;
-        patient[i].lru = i;
+        patient[i].valid = 0;   // invalidate all entries
+        patient[i].lru = i;     // set up LRUs
     }
-    xSemaphoreGive(xSemaphore);
+    xSemaphoreGive(xSemaphore); // release resource
 }
 
-void displayPatientDataTask(void *arg)
+void displayPatientDataTask(void *arg)  // task to display data to display
 {
     int i;
     while(1)
     {   
-        for(i = 0; i < 3; i++)
+        for(i = 0; i < 3; i++)  // cycle through the patient data struct array
         {
-            xSemaphoreTake(xSemaphore,portMAX_DELAY);
-            if(patient[i].valid == 1)
+            xSemaphoreTake(xSemaphore,portMAX_DELAY);   // reserve resource, no timeout for access
+            if(patient[i].valid == 1)   // if data is valid
             {
-                clearDisplay();
-                drawString(patient[i].name,0,0,8,0);
-                drawFloat(patient[i].value,0,1,16);
-                // clear box for high or low value warning
-                clearBox(115,1,127,2);
-                drawString(patient[i].reference,115,1,16,0);
-                drawString(patient[i].units,0,3,16,0);
-                drawString(patient[i].description,0,6,8,1);
-                display();
-                xSemaphoreGive(xSemaphore);
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                clearDisplay(); // clear display
+                drawString(patient[i].name,0,0,8,0);    // draw patient name 8px font, no wrap, 0 0 coordinates
+                drawFloat(patient[i].value,0,1,16);     // draw observation value
+                clearBox(115,1,127,2);  // clear box for high or low value warning
+                drawString(patient[i].reference,115,1,16,0);    // draw reference warning
+                drawString(patient[i].units,0,3,16,0);  // draw units
+                drawString(patient[i].description,0,6,8,1); // draw loinc english description
+                display();  // push buffer to display
+                xSemaphoreGive(xSemaphore); // release resource
+                vTaskDelay(2000 / portTICK_PERIOD_MS);  // wait 2 sec for next element of array
             }
             else
             {
-                xSemaphoreGive(xSemaphore);
+                xSemaphoreGive(xSemaphore); // if the data is not valid, release resource
             }
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);   // must wait or WDT timeout
     }
-    vTaskDelete(NULL);
+    vTaskDelete(NULL);  // task must delete before leaving scope
 }
 /*  writes data to patient element in
     in  index
@@ -741,20 +743,21 @@ void modifyLRU(int m)
 {
     int k;
     printf("modify lru\n");
-    patient[m].lru = -1;
+    patient[m].lru = -1;    // set most recently accessed lru to -1
 
-    for(k = 0; k < 3; k++)
+    for(k = 0; k < 3; k++)  // increment all lru's
     {
         patient[k].lru = patient[k].lru + 1;
-        if(patient[k].lru > 2)
-        {
+        if(patient[k].lru > 2)  // if any is greater than 2, set it to 2
+        {   // this should never be needed
             patient[k].lru = 2;
         }
     }
 }
 
-void parseJSONTask(char *js)
+void parseJSONTask(char *js)    // task to parse incoming messages
 {
+    // data types from parson libraray
     JSON_Value *root_value;
     JSON_Object *data, *codeObj, *system, *subject, *valueQuantity, *interpCodingObj, *interpSystem;
     JSON_Array *codingArray, *interp, *interpCodingArray;
@@ -768,9 +771,9 @@ void parseJSONTask(char *js)
 
     root_value = json_parse_string(js);
 	data = json_value_get_object(root_value);
-    if(data == NULL)
+    if(data == NULL)    // if the data is not a json object
         vTaskDelete(NULL);
-
+    // take information from the message 
     // loinc code
     codeObj = json_object_get_object(data,"code");
     codingArray = json_object_get_array(codeObj,"coding");
@@ -796,10 +799,11 @@ void parseJSONTask(char *js)
     interpSystem = json_array_get_object(interpCodingArray,0);
     strcpy(msgRef,json_object_get_string(interpSystem,"code"));
 
+    // user feedback
     printf("LOINC:\t%s\nInterp:\t%s\nValue:\t%f\nUnits:\t%s\nName:\t%s\nRef:\t%s\n"
     ,msgLoincCode,msgLoincCodeInterp,msgValue,msgUnits,msgName,msgRef);
 
-    xSemaphoreTake(xSemaphore,portMAX_DELAY);
+    xSemaphoreTake(xSemaphore,portMAX_DELAY);   // reserve resource
         // if the name in the new message is equal to
         // the name of the current data ie. new data
         // is data of the current patient
@@ -883,8 +887,8 @@ void parseJSONTask(char *js)
                 }
             } 
         }
-    xSemaphoreGive(xSemaphore);
-    vTaskDelete(NULL);
+    xSemaphoreGive(xSemaphore); // release resource
+    vTaskDelete(NULL);  // task must delete before leaving scope
 }
 
 // this function deals with mqtt events
@@ -893,23 +897,22 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     // get the client associated with the event
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
-    // your_context_t *context = event->context;
     switch (event->event_id) {
-        case MQTT_EVENT_CONNECTED:
+        case MQTT_EVENT_CONNECTED:  // connected to broker
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             msg_id = esp_mqtt_client_subscribe(client, "/topic/conor0", 0);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             break;
-        case MQTT_EVENT_DISCONNECTED:
+        case MQTT_EVENT_DISCONNECTED:   // disconnected from broker
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
             break;
 
-        case MQTT_EVENT_SUBSCRIBED:
+        case MQTT_EVENT_SUBSCRIBED: // subscribed to topic
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
             //msg_id = esp_mqtt_client_publish(client, "/topic/conor0", "data", 0, 0, 0);
             //ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
             break;
-        case MQTT_EVENT_UNSUBSCRIBED:
+        case MQTT_EVENT_UNSUBSCRIBED:   // unsubscribed from topic
             ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
             break;
         case MQTT_EVENT_PUBLISHED:
@@ -926,11 +929,12 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             total_data_len  total   length of the data received
         */
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);   // print message to terminal
             printf("DATA=%.*s\r\n", event->data_len, event->data);
             msg_id = esp_mqtt_client_publish(client, "/topic/conor1", "received data", 0, 0, 0);
-            strncpy(jsonString, event->data, event->data_len);
-            jsonString[event->data_len] = '\0';
+            strncpy(jsonString, event->data, event->data_len);  // copy message to string
+            jsonString[event->data_len] = '\0'; // terminate string
+            // create task to parse fhir message, this runs at the same time as the display task -> multitasking
             xTaskCreate(&parseJSONTask, "parse JSON task", (1024 * 8),  (void *)jsonString, 5, NULL);
             break;
         case MQTT_EVENT_ERROR:
@@ -947,15 +951,15 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
     switch (event->event_id) {
-        case SYSTEM_EVENT_STA_START:
-            esp_wifi_connect();
+        case SYSTEM_EVENT_STA_START:    // wifi station start
+            esp_wifi_connect(); // connect to wifi
             break;
-        case SYSTEM_EVENT_STA_GOT_IP:
-            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+        case SYSTEM_EVENT_STA_GOT_IP:   // got ip address
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);    // set connected bit
             break;
-        case SYSTEM_EVENT_STA_DISCONNECTED:
-            esp_wifi_connect();
-            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        case SYSTEM_EVENT_STA_DISCONNECTED: // wifi disconnected
+            esp_wifi_connect(); // try to reconnect
+            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);  // clear connected bit
             break;
         default:
             break;
@@ -1041,8 +1045,8 @@ void app_main() // vTaskStartScheduler is created here
 {
     // create mutex, returns handle
     xSemaphore = xSemaphoreCreateMutex();
-    initData();
-
+    initData(); // initialise patient data struct array
+    // start up status messages
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
@@ -1055,22 +1059,23 @@ void app_main() // vTaskStartScheduler is created here
     esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
     esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
 
-    ESP_ERROR_CHECK(i2c_master_init());
-    begin(SSD1306_SWITCHCAPVCC, 0x3C);
+    ESP_ERROR_CHECK(i2c_master_init()); // initialise i2c
+    begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialise display, must do this before anything else
 
-    clearDisplay();
-    drawString("starting",0,0,16,0);
-    display();
+    clearDisplay(); // clear display
+    drawString("starting",0,0,16,0);    // start up splash screen
+    display();  // push buffer to display   
 
-    nvs_flash_init();
-    wifi_init();
-    mqtt_app_start();
+    nvs_flash_init();   // non volatile storage for wifi configs
+    wifi_init();    // initialise wifi
+    mqtt_app_start();   // initialise mqtt
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // create display task, allocate (1024 * 4) bytes of ram
     xTaskCreate(&displayPatientDataTask, "display patient data task", (1024 * 4), NULL, 5, NULL);
 
     while(1)
-    {
+    {   // wait or WDT timeout
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
